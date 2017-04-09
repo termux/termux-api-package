@@ -17,6 +17,7 @@ show_usage () {
     echo "  --led-color rrggbb       color of the blinking led as RRGGBB (default: none)"
     echo "  --led-on milliseconds    number of milliseconds for the LED to be on while it's flashing (default: 800)"
     echo "  --led-off milliseconds   number of milliseconds for the LED to be off while it's flashing (default: 800)"
+    echo "  --on-delete action       action to execute when the the notification is cleared"
     echo "  --priority prio          notification priority (high/low/max/min/default)"
     echo "  --sound                  play a sound with the notification"
     echo "  --title title            notification title to show"
@@ -29,6 +30,7 @@ OPT_ID=""
 OPT_LED_COLOR=""
 OPT_LED_OFF=""
 OPT_LED_ON=""
+OPT_ON_DELETE=""
 OPT_PRIORITY=""
 OPT_SOUND=""
 OPT_TITLE=""
@@ -49,6 +51,7 @@ button2:,button2-action:,\
 button3:,button3-action:,\
 content:,help,id:,\
 led-color:,led-on:,led-off:,\
+on-delete:,\
 priority:,sound,title:,vibrate: \
      -s bash \
      -- "$@"`
@@ -69,6 +72,7 @@ while true; do
 		--led-color) OPT_LED_COLOR="$2"; shift 2;;
 		--led-on) OPT_LED_ON="$2"; shift 2;;
 		--led-off) OPT_LED_OFF="$2"; shift 2;;
+		--on-delete) OPT_ON_DELETE_ACTION="$2"; shift 2;;
 		--priority) OPT_PRIORITY="$2"; shift 2;;
 		--sound) OPT_SOUND="true"; shift 1;;
 		-t | --title) OPT_TITLE="$2"; shift 2;;
@@ -91,6 +95,7 @@ if [ -n "$OPT_ID" ]; then set -- "$@" --es id "$OPT_ID"; fi
 if [ -n "$OPT_LED_COLOR" ]; then set -- "$@" --es led-color "$OPT_LED_COLOR"; fi
 if [ -n "$OPT_LED_OFF" ]; then set -- "$@" --ei led-off "$OPT_LED_OFF"; fi
 if [ -n "$OPT_LED_ON" ]; then set -- "$@" --ei led-on "$OPT_LED_ON"; fi
+if [ -n "$OPT_ON_DELETE_ACTION" ]; then set -- "$@" --es on_delete_action "$OPT_ON_DELETE_ACTION"; fi
 if [ -n "$OPT_PRIORITY" ]; then set -- "$@" --es priority "$OPT_PRIORITY"; fi
 if [ -n "$OPT_SOUND" ]; then set -- "$@" --ez sound "$OPT_SOUND"; fi
 if [ -n "$OPT_TITLE" ]; then set -- "$@" --es title "$OPT_TITLE"; fi
