@@ -24,7 +24,7 @@ if [ -z "$RECIPIENTS" ]; then
     echo "$SCRIPTNAME: no recipient number given"; exit 1;
 fi
 
-CMD="@TERMUX_API@ SmsSend $RECIPIENTS"
+CMD="/data/data/com.termux/files/usr/libexec/termux-api SmsSend $RECIPIENTS"
 if [ $# = 0 ]; then
     $CMD
 else

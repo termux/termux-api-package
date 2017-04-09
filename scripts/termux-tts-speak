@@ -40,7 +40,7 @@ do
 done
 shift $(($OPTIND-1))
 
-CMD="@TERMUX_API@ TextToSpeech $PARAMS"
+CMD="/data/data/com.termux/files/usr/libexec/termux-api TextToSpeech $PARAMS"
 if [ $# = 0 ]; then
     $CMD
 else

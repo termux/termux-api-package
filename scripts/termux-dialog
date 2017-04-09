@@ -40,4 +40,4 @@ set -- $ARG_M $ARG_P
 if [ -n "$ARG_I" ]; then set -- "$@" $ARG_I "$OPT_I"; fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T"; fi
 
-@TERMUX_API@ Dialog "$@"
+/data/data/com.termux/files/usr/libexec/termux-api Dialog "$@"

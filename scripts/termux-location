@@ -45,4 +45,4 @@ shift $(($OPTIND-1))
 
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-@TERMUX_API@ Location $PARAMS
+/data/data/com.termux/files/usr/libexec/termux-api Location $PARAMS

@@ -20,7 +20,7 @@ do
 done
 shift $(($OPTIND-1))
 
-CMD="@TERMUX_API@ Toast $PARAMS"
+CMD="/data/data/com.termux/files/usr/libexec/termux-api Toast $PARAMS"
 if [ $# = 0 ]; then
     $CMD
 else

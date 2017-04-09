@@ -36,4 +36,4 @@ if [ -n "$ARG_D" ]; then set -- "$@" $ARG_D "$OPT_D"; fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T"; fi
 set -- "$@" $URL_TO_DOWNLOAD
 
-@TERMUX_API@ Download "$@"
+/data/data/com.termux/files/usr/libexec/termux-api Download "$@"

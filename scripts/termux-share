@@ -43,7 +43,7 @@ if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
 if [ $# != 0 ]; then
     # Note that the file path can contain whitespace.
-    @TERMUX_API@ Share $PARAMS --es file "`realpath "$1"`"
+    /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS --es file "`realpath "$1"`"
 else
-    @TERMUX_API@ Share $PARAMS
+    /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS
 fi
