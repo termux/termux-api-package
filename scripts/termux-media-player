@@ -1,0 +1,103 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-media-player
+
+show_usage () {
+    echo "Usage: $SCRIPTNAME cmd [args]"
+    echo;
+    echo -e "help        Shows this help"
+    echo -e "info        Displays current playback information"
+    echo -e "play        Resumes playback if paused"
+    echo -e "play <file> Plays specified media file"
+    echo -e "pause       Pauses playback"
+    echo -e "stop        Quits playback"
+    echo;
+    echo "--NOTE--"
+    echo "To playback media files they must reside in a publicly"
+    echo "accessible directory, such as /storage."
+    echo "Otherwise, they will fail to load!"
+    echo
+    echo "**Run 'termux-setup-storage' before using!**"
+    echo;
+}
+
+if [ $# = 0 ]; then
+    show_usage
+    exit 1
+fi
+
+# Params we're sending to MediaPlayerAPI
+PARAMS=""
+
+play_media () {
+    if [ $# -gt 1 ]; then
+    	echo "Error! play only takes one argument which is the name of file to play"
+	exit 1
+    # If no arguments, we should resume the last played media file if it exists
+    elif [ $# -eq 0 ]; then
+	PARAMS="-a resume"
+    else
+	# Make sure we actually receive a file
+	if [ ! -f $1 ]; then
+	    echo "Error: Not a file!"
+	    exit 1
+	else
+	    local file=$(readlink -q -f $1)
+	    local PATTERN='.3gp|.flac|.mkv|.mp3|.ogg|.wav$'
+
+	    # Ensure that file is a supported media file
+	    if ! ls $file | grep -E $PATTERN -q; then
+		echo "Error: File is not a valid media file!"
+		exit 1
+	    else
+		PARAMS="-a play --es file $file"
+	    fi
+	fi
+    fi
+}
+
+media_info () {
+    if [ $# -ne 0 ]; then
+	echo "Error! info takes no arguments!"
+	exit 1
+    fi
+    PARAMS="-a info"
+}
+
+pause_media () {
+    if [ $# -ne 0 ]; then
+	echo "Error! pause takes no arguments!"
+	exit 1
+    fi
+    PARAMS="-a pause"
+}
+
+stop_media () {
+    if [ $# -ne 0 ]; then
+	echo "Error! stop takes no arguments!"
+	exit 1
+    fi
+    PARAMS="-a stop"
+}
+
+# Get command and command args
+while [ $# -gt 0 ]; do
+    # MediaPlayer command
+    cmd=$1
+
+    # Command arguments
+    arg_array=( $@ );
+    cmd_args=${arg_array[@]:1}
+
+    # Find correct command and execute w/ args
+    case $cmd in
+	"play" ) play_media $cmd_args; break ;;
+	"info" ) media_info $cmd_args; break ;;
+	"pause" ) pause_media $cmd_args; break ;;
+	"stop" ) stop_media $cmd_args; break ;;
+	"help" | * ) echo "$SCRIPTNAME: Invalid cmd: $cmd"; show_usage; exit 1 ;;
+    esac
+done
+
+/data/data/com.termux/files/usr/libexec/termux-api MediaPlayer $PARAMS
