@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-set -e -u
+set -e -u -f
 
 SCRIPTNAME=termux-notification
 show_usage () {
