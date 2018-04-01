@@ -1,0 +1,103 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-sensor
+show_usage () {
+	echo "Usage: $SCRIPTNAME"
+	echo "Get information about types of sensors as well as live data"
+	echo "  -h, help           Show this help"
+	echo "  -a, all            Listen to all sensors (WARNING! may have battery impact)"
+	echo "  -c, cleanup        Perform cleanup (release sensor resources)"
+	echo "  -l, list           Show list of available sensors"
+	echo "  -s, sensors [,,,]  Sensors to listen to (can contain just partial name)"
+	echo "  -d, delay [ms]     Delay time in milliseconds before receiving new sensor update"
+	exit 0
+}
+
+# ensure we properly release resources if needed on ^C
+trap handle_interrupt  SIGTERM SIGINT
+
+if [ $# -eq 0 ]; then
+	echo "No arguments supplied!"
+	show_usage
+	exit 1;
+fi
+
+SENSOR_FLAG=1
+ALL_SENSORS_FLAG=2
+LIST_FLAG=4
+CLEANUP_FLAG=8
+DELAY_FLAG=16
+FLAGS=0
+
+handle_interrupt () {
+	echo "Caught interrupt.. Finishing..."
+	cleanup
+}
+
+cleanup () {
+	if [ $((FLAGS & (ALL_SENSORS_FLAG | SENSOR_FLAG))) != 0 ]; then
+		echo "Performing sensor cleanup"
+		call_api "-a cleanup"
+	else
+		echo "No cleanup necessary"
+	fi
+}
+
+get_sensors () {
+	if [ $# -gt 1 ]; then
+		usage_error "Sensor arg should be a comma delimited string!"
+	fi
+}
+
+get_delay () {
+	if [ $# -gt 1 ]; then
+		usage_error "Too many arguments for -d delay"
+	elif ! [[ $1 =~ ^[0-9]+$ ]]; then
+		usage_error "Illegal argument! -d delay arg should be a number!"
+	fi
+}
+
+call_api () {
+	/data/data/com.termux/files/usr/libexec/termux-api Sensor $@
+}
+
+set_flag () {
+	FLAGS=$((FLAGS | $1));
+}
+
+usage_error () {
+	echo "ERROR: $@"
+	show_usage
+	exit 1
+}
+
+
+PARAMS=""
+while getopts :h,a,c,l,s:d: option
+do
+	case "$option" in
+		h) show_usage ;;
+		a) set_flag $ALL_SENSORS_FLAG; PARAMS="-a sensors $PARAMS --ez all true" ;;
+		c) set_flag $CLEANUP_FLAG; PARAMS="-a cleanup" ;;
+		l) set_flag $LIST_FLAG; PARAMS="-a list" ;;
+		s) set_flag $SENSOR_FLAG; get_sensors $OPTARG; PARAMS="-a sensors --es sensors $OPTARG" ;;
+		d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS="$PARAMS --ei delay $OPTARG" ;;
+		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+	esac
+done
+shift $((OPTIND -1))
+
+# Validate options were set properly
+
+if [ $((FLAGS & CLEANUP_FLAG)) -ne 0 ] && [ $FLAGS -ne $CLEANUP_FLAG ]; then
+	usage_error "No other options should be specified with -c cleanup!"
+elif [ $((FLAGS & LIST_FLAG)) -ne 0 ] && [ $FLAGS -ne $LIST_FLAG ]; then
+	usage_error "No other options should be specified with -l list!"
+elif [ $((FLAGS & DELAY_FLAG)) -ne 0 ] && [ $((FLAGS & (ALL_SENSORS_FLAG | SENSOR_FLAG))) -eq 0 ]; then
+	usage_error "Use -s <sensors> or -a option when using -d delay!"
+elif [ $((FLAGS & ALL_SENSORS_FLAG)) -ne 0 ] && [ $((FLAGS & SENSOR_FLAG)) -ne 0 ]; then
+	usage_error "Listed sensors will be ignored with -a all option!"
+fi
+
+call_api $PARAMS
