@@ -31,27 +31,27 @@ fi
 PARAMS=""
 
 play_media () {
-    if [ $# -gt 1 ]; then
-    	echo "Error! play only takes one argument which is the name of file to play"
-	exit 1
-    # If no arguments, we should resume the last played media file if it exists
-    elif [ $# -eq 0 ]; then
+    file=$@
+
+    if [ $# -eq 0 ]; then
 	PARAMS="-a resume"
     else
 	# Make sure we actually receive a file
-	if [ ! -f $1 ]; then
-	    echo "Error: Not a file!"
+	if [[ ! -f $file ]]; then
+	    echo "Error: Not a file: $file"
 	    exit 1
 	else
-	    local file=$(readlink -q -f $1)
+	    local media_file=$(readlink -q -f "$file")
 	    local PATTERN='.3gp|.flac|.mkv|.mp3|.ogg|.wav$'
 
 	    # Ensure that file is a supported media file
-	    if ! ls $file | grep -E $PATTERN -q; then
+	    if ! ls "$media_file" | grep -E $PATTERN -q; then
 		echo "Error: File is not a valid media file!"
 		exit 1
 	    else
-		PARAMS="-a play --es file $file"
+		# Escape spaces
+		media_file=$(echo $media_file | sed 's/ /\\s/g')
+		PARAMS="-a play --es file $media_file"
 	    fi
 	fi
     fi
@@ -99,5 +99,6 @@ while [ $# -gt 0 ]; do
 	"help" | * ) echo "$SCRIPTNAME: Invalid cmd: $cmd"; show_usage; exit 1 ;;
     esac
 done
+
 
 /data/data/com.termux/files/usr/libexec/termux-api MediaPlayer $PARAMS
