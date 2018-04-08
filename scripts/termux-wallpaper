@@ -1,0 +1,71 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+set -e
+
+SCRIPTNAME=termux-wallpaper
+
+show_usage () {
+	echo "Change wallpaper on your device"
+	echo
+	echo "Usage: $SCRIPTNAME cmd [args]"
+	echo "-h         show this help"
+	echo "-f <file>  set wallpaper from file"
+	echo "-u <url>   set wallpaper from url resource"
+	echo "-l         set wallpaper for lockscreen (Nougat and later)"
+	exit 1
+}
+
+call_api() {
+	/data/data/com.termux/files/usr/libexec/termux-api Wallpaper "$@"
+}
+
+usage_error () {
+	echo "ERROR: $@"
+	show_usage
+}
+
+LOCKSCREEN_FLAG=1
+RESOURCE_FLAG=2
+
+FLAGS=0
+
+set_single () {
+	if [ $((FLAGS & $1)) -ne 0 ]; then
+		usage_error "Option already set"
+	fi
+	FLAGS=$((FLAGS | $1))
+	PARAMS="$PARAMS $2"
+}
+
+set_resource () {
+	if [ $((FLAGS & $RESOURCE_FLAG)) -ne 0 ]; then
+		usage_error "More than one image resource specified!"
+	fi
+	set_single $RESOURCE_FLAG "$1"
+}
+
+set_file () {
+	if [ ! -f $1 ]; then
+		usage_error "'$1' is not a file!"
+	fi
+	set_resource "--es file "$(realpath $1)""
+}
+
+while getopts :h,:l,f:,u: option
+do
+	case "$option" in
+		h) show_usage ;;
+		l) set_single $LOCKSCREEN_FLAG "--ez lockscreen true" ;;
+		f) set_file $OPTARG ;;
+		u) set_resource "--es url $OPTARG" ;;
+		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1 ;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $((FLAGS & RESOURCE_FLAG)) -eq 0 ]; then
+	usage_error "No file or url provided!"
+fi
+
+call_api $PARAMS
