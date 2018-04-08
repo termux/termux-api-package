@@ -1,0 +1,88 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+
+SCRIPTNAME=termux-microphone-record
+
+show_usage () {
+	echo "Usage: $SCRIPTNAME [args]"
+	echo "Record using microphone on your device"
+	echo
+	echo "-h, help     Shows this help"
+	echo "-f <file>    Start recording to specific file"
+	echo "-l <limit>   Start recording w/ specified limit (in seconds)"
+	echo "-d           Start recording w/ defaults"
+	echo "-i           Get info about current recording"
+	echo "-q           Quits recording"
+	exit 0
+}
+
+if [ $# -eq 0 ]; then
+	echo "No arguments supplied"
+	show_usage
+	exit 1
+fi
+
+FILE_FLAG=1
+LIMIT_FLAG=2
+INFO_FLAG=4
+RECORD_FLAG=8
+QUIT_FLAG=16
+
+FLAGS=0
+
+call_api () {
+	/data/data/com.termux/files/usr/libexec/termux-api MicRecorder $@
+}
+
+set_flag () {
+	FLAGS=$((FLAGS | $1 ));
+}
+
+usage_error () {
+	echo "ERROR: $@"
+	show_usage
+	exit 1
+}
+
+PARAMS=""
+
+while getopts :h,f:,l:,d,i,q option
+do
+	case "$option" in
+		h) show_usage ;;
+		f) set_flag $FILE_FLAG; PARAMS="$PARAMS --es file $(pwd)/$OPTARG" ;;
+
+		# Multiply by 1000 to pass to API in seconds, rather than milliseconds
+		l) set_flag $LIMIT_FLAG; PARAMS="$PARAMS --ei limit $((OPTARG * 1000))" ;;
+
+		d) set_flag $RECORD_FLAG; PARAMS="$PARAMS -a record" ;;
+		i) set_flag $INFO_FLAG; PARAMS="-a info" ;;
+		q) set_flag $QUIT_FLAG; PARAMS="-a quit" ;;
+		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1; ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+# Validate options were set properly
+
+if [ $((FLAGS & QUIT_FLAG)) -ne 0 ] && [ $FLAGS -ne $QUIT_FLAG ]; then
+	usage_error "No other options should be specified with -q quit!"
+fi
+
+if [ $((FLAGS & INFO_FLAG)) -ne 0 ] && [ $FLAGS -ne $INFO_FLAG ]; then
+	usage_error "No other options should be specified with -i info!"
+fi
+
+# Add implied record action if not explicitly set w/ other valid options
+if [ $((FLAGS & (FILE_FLAG | LIMIT_FLAG))) -ne 0 ]; then
+	if [ $((FLAGS & RECORD_FLAG)) -eq 0 ]; then
+		PARAMS="$PARAMS -a record"
+	fi
+fi
+
+# If nothing was set, we know we received invalid arguments
+if [ $FLAGS -eq 0 ]; then
+	usage_error "Invalid argument: '$@'"
+fi
+
+call_api $PARAMS
