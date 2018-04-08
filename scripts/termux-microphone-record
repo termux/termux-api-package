@@ -22,7 +22,7 @@ usage_error () {
 }
 
 sole() {
-    if [ $# -gt 1 ]; then
+    if [ "$1 $2" != "-$option $OPTARG" ] || [ $# -gt 2 ]; then
         echo "ERROR: No other options should be specified with -$option!"
         usage_error
     fi
@@ -49,7 +49,7 @@ do
            dir="$(realpath "$dir")"
            add_params --es file "$dir/$file"
            ;;
-        # API takes limit in  milliseconds
+        # API takes limit in milliseconds
         l) record=yes
            add_params --ei limit $((OPTARG * 1000))
            ;;
