@@ -3,12 +3,14 @@ set -e -u
 
 SCRIPTNAME=termux-dialog
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-i hint] [-m] [-p] [-t title]"
+    echo "Usage: $SCRIPTNAME [-i hint] [-m] [-p] [-t title] [-w widget]"
     echo "Show a text entry dialog."
-    echo "  -i hint   the input hint to show when the input is empty"
-    echo "  -m        use a textarea with multiple lines instead of a single"
-    echo "  -p        enter the input as a password"
-    echo "  -t title  the title to show for the input prompt"
+    echo "  -i hint          the input hint to show when the input is empty"
+    echo "  -m               use a textarea with multiple lines instead of a single"
+    echo "  -p               enter the input as a password"
+    echo "  -t title         the title to show for the input prompt"
+    echo "  -w widget        widget type to use: confirm, text, date, time, spinner, or speech"
+    echo "  -v values [,,,]  values to use w/ spinner widget"
     exit 0
 }
 
@@ -20,8 +22,14 @@ ARG_M=""
 ARG_P=""
 ARG_T=""
 OPT_T=""
+OPT_V=""
+ARG_V=""
 
-while getopts :hi:mpt: option
+# Use default values to preserve backwards compatibility w/ older dialog implementation
+OPT_W="text"
+ARG_W="--es input_method"
+
+while getopts :hi:mpt:v:w: option
 do
 	case "$option" in
 		h) show_usage;;
@@ -29,15 +37,19 @@ do
 		m) ARG_M="--ez multiple_lines true";;
 		p) ARG_P="--es input_type password";;
 		t) ARG_T="--es input_title"; OPT_T="$OPTARG";;
+		w) ARG_W="--es input_method"; OPT_W="$OPTARG";;
+		v) ARG_V="--es input_values"; OPT_V="$OPTARG";;
 		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
 	esac
 done
 shift $(($OPTIND-1))
 
-if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+# if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
 set -- $ARG_M $ARG_P
 if [ -n "$ARG_I" ]; then set -- "$@" $ARG_I "$OPT_I"; fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T"; fi
+if [ -n "$ARG_V" ]; then set -- "$@" $ARG_V "$OPT_V"; fi
+if [ -n "$ARG_W" ]; then set -- "$@" $ARG_W "$OPT_W"; fi
 
 /data/data/com.termux/files/usr/libexec/termux-api Dialog "$@"
