@@ -13,4 +13,9 @@ if [ "$#" -ne 1 ]; then
         show_usage
 fi
 
+case $1 in
+        true|false);;
+        *) show_usage;;
+esac
+
 /data/data/com.termux/files/usr/libexec/termux-api WifiEnable --ez enabled $1
