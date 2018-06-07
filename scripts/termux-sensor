@@ -38,7 +38,7 @@ handle_interrupt () {
 cleanup () {
 	if [ $((FLAGS & (ALL_SENSORS_FLAG | SENSOR_FLAG))) != 0 ]; then
 		echo "Performing sensor cleanup"
-		call_api "-a cleanup"
+		call_api -a cleanup
 	else
 		echo "No cleanup necessary"
 	fi
@@ -59,7 +59,7 @@ get_delay () {
 }
 
 call_api () {
-	/data/data/com.termux/files/usr/libexec/termux-api Sensor $@
+  /data/data/com.termux/files/usr/libexec/termux-api Sensor "$@"
 }
 
 set_flag () {
@@ -73,31 +73,31 @@ usage_error () {
 }
 
 
-PARAMS=""
+PARAMS=()
 while getopts :h,a,c,l,s:d: option
 do
-	case "$option" in
-		h) show_usage ;;
-		a) set_flag $ALL_SENSORS_FLAG; PARAMS="-a sensors $PARAMS --ez all true" ;;
-		c) set_flag $CLEANUP_FLAG; PARAMS="-a cleanup" ;;
-		l) set_flag $LIST_FLAG; PARAMS="-a list" ;;
-		s) set_flag $SENSOR_FLAG; get_sensors "$OPTARG"; PARAMS="-a sensors --es sensors $OPTARG" ;;
-		d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS="$PARAMS --ei delay $OPTARG" ;;
-		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
-	esac
+  case "$option" in
+    h) show_usage ;;
+    a) set_flag $ALL_SENSORS_FLAG; PARAMS=('-a' 'sensors' '--ez' 'all' 'true');;
+    c) set_flag $CLEANUP_FLAG; PARAMS=('-a' 'cleanup') ;;
+    l) set_flag $LIST_FLAG; PARAMS=('-a' 'list') ;;
+    s) set_flag $SENSOR_FLAG; get_sensors "$OPTARG"; PARAMS=('-a' 'sensors' '--es' 'sensors' "$OPTARG") ;;
+    d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS+=('--ei' 'delay' $OPTARG) ;;
+    ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+  esac
 done
 shift $((OPTIND -1))
 
 # Validate options were set properly
 
 if [ $((FLAGS & CLEANUP_FLAG)) -ne 0 ] && [ $FLAGS -ne $CLEANUP_FLAG ]; then
-	usage_error "No other options should be specified with -c cleanup!"
+  usage_error "No other options should be specified with -c cleanup!"
 elif [ $((FLAGS & LIST_FLAG)) -ne 0 ] && [ $FLAGS -ne $LIST_FLAG ]; then
-	usage_error "No other options should be specified with -l list!"
+  usage_error "No other options should be specified with -l list!"
 elif [ $((FLAGS & DELAY_FLAG)) -ne 0 ] && [ $((FLAGS & (ALL_SENSORS_FLAG | SENSOR_FLAG))) -eq 0 ]; then
-	usage_error "Use -s <sensors> or -a option when using -d delay!"
+  usage_error "Use -s <sensors> or -a option when using -d delay!"
 elif [ $((FLAGS & ALL_SENSORS_FLAG)) -ne 0 ] && [ $((FLAGS & SENSOR_FLAG)) -ne 0 ]; then
-	usage_error "Listed sensors will be ignored with -a all option!"
+  usage_error "Listed sensors will be ignored with -a all option!"
 fi
 
-call_api $PARAMS
+call_api "${PARAMS[@]}"
