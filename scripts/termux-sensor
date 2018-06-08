@@ -78,11 +78,11 @@ while getopts :h,a,c,l,s:d: option
 do
 	case "$option" in
 		h) show_usage ;;
-		a) set_flag $ALL_SENSORS_FLAG; PARAMS+=('-a' 'sensors' '--ez' 'all' 'true');;
-		c) set_flag $CLEANUP_FLAG; PARAMS=('-a' 'cleanup') ;;
-		l) set_flag $LIST_FLAG; PARAMS=('-a' 'list') ;;
-		s) set_flag $SENSOR_FLAG; get_sensors "$OPTARG"; PARAMS+=('-a' 'sensors' '--es' 'sensors' "$OPTARG") ;;
-		d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS+=('--ei' 'delay' $OPTARG) ;;
+		a) set_flag $ALL_SENSORS_FLAG; PARAMS+=(-a sensors --ez all true);;
+		c) set_flag $CLEANUP_FLAG; PARAMS=(-a cleanup) ;;
+		l) set_flag $LIST_FLAG; PARAMS=(-a list) ;;
+		s) set_flag $SENSOR_FLAG; get_sensors "$OPTARG"; PARAMS+=(-a sensors --es sensors "$OPTARG") ;;
+		d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS+=(--ei delay $OPTARG) ;;
 		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
 	esac
 done
