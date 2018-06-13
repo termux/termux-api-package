@@ -1,0 +1,22 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-brightness
+show_usage() {
+    echo "Usage: $SCRIPTNAME brightness"
+    echo "Set the screen brightness between 0 and 255"
+    exit 0
+}
+
+if [ $# != 1 ]; then
+    show_usage
+fi
+
+if ! [[ $1 =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Arg must be a number between 0 - 255!"
+    show_usage
+fi
+
+ARGS="--ei brightness $1"
+
+/data/data/com.termux/files/usr/libexec/termux-api Brightness $ARGS
