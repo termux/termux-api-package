@@ -1,0 +1,26 @@
+#!/data/data/com.termux/files/usr/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-fingerprint
+show_usage () {
+    echo "Usage: $SCRIPTNAME"
+    echo "Use fingerprint sensor on device to check for authentication"
+    echo "NOTE: Only available on Marshmallow and later"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $(($OPTIND-1))
+
+if [ $# -ne 0 ]; then
+    echo "$SCRIPTNAME takes no arguments"
+    exit 1
+fi
+
+/data/data/com.termux/files/usr/libexec/termux-api Fingerprint
