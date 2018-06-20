@@ -61,56 +61,56 @@ FLAGS=0
 
 # Show usage help for specific widget
 widget_usage () {
-    echo -n -e "$1 \t"
+    echo -n -e "$1 - "
 
     case "$1" in
         "confirm")
-            echo -e "Show confirmation dialog"
-            echo -e "\t\t$OPT_TITLE_DESC"
-            echo -e "\t\t$OPT_HINT_DESC"
+            echo "Show confirmation dialog"
+            echo "    $OPT_TITLE_DESC"
+            echo "    $OPT_HINT_DESC"
             ;;
         "checkbox")
-            echo -e "Select multiple values using checkboxes"
-            echo -e "\t\t$OPT_VALUES_DESC"
-            echo -e "\t\t$OPT_TITLE_DESC"
+            echo "Select multiple values using checkboxes"
+            echo "    $OPT_VALUES_DESC"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "counter")
-            echo -e "Pick a number in specified range"
-            echo -e "\t\t$OPT_TITLE_DESC"
-            echo -e "\t\t$OPT_RANGE_DESC"
+            echo "Pick a number in specified range"
+            echo "    $OPT_TITLE_DESC"
+            echo "    $OPT_RANGE_DESC"
             ;;
         "date")
-            echo -e "\tPick a date"
-            echo -e "\t\t$OPT_TITLE_DESC"
+            echo "Pick a date"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "radio")
-            echo -e "\tPick a single value from radio buttons"
-            echo -e "\t\t$OPT_VALUES_DESC"
-            echo -e "\t\t$OPT_TITLE_DESC"
+            echo "Pick a single value from radio buttons"
+            echo "    $OPT_VALUES_DESC"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "sheet")
-            echo -e "\tPick a value from a sliding bottom sheet interface"
-            echo -e "\t\t$OPT_VALUES_DESC"
-            echo -e "\t\t$OPT_TITLE_DESC"
+            echo "Pick a value from a sliding bottom sheet interface"
+            echo "    $OPT_VALUES_DESC"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "spinner")
-            echo -e "Pick a single value from a dropdown spinner"
-            echo -e "\t\t$OPT_VALUES_DESC"
-            echo -e "\t\t$OPT_TITLE_DESC"
+            echo "Pick a single value from a dropdown spinner"
+            echo "    $OPT_VALUES_DESC"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "text")
-            echo -e "\tInput text (default if no widget specified)"
-            echo -e "\t\t$OPT_HINT_DESC"
-            echo -e "\t\t$OPT_PASS_DESC -- cannot use with -m"
-            echo -e "\t\t$OPT_TITLE_DESC"
-            echo -e "\t\t$OPT_MULTI_LINE_DESC -- cannot use with -p"
+            echo "Input text (default if no widget specified)"
+            echo "    $OPT_HINT_DESC"
+            echo "    $OPT_PASS_DESC -- cannot use with -m"
+            echo "    $OPT_TITLE_DESC"
+            echo "    $OPT_MULTI_LINE_DESC -- cannot use with -p"
             ;;
         "time")
-            echo -e "\tPick a time value"
-            echo -e "\t\t[-p title] dialog title (optional)"
+            echo "Pick a time value"
+            echo "    [-p title] dialog title (optional)"
             ;;
         *)
-            echo -e "\tUnknown usage for '$1'"
+            echo "\tUnknown usage for '$1'"
             ;;
     esac
 }
