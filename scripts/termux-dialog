@@ -108,7 +108,7 @@ widget_usage () {
             ;;
         "time")
             echo "Pick a time value"
-            echo "    [-p title] dialog title (optional)"
+            echo "    $OPT_TITLE_DESC"
             ;;
         *)
             echo "\tUnknown usage for '$1'"
