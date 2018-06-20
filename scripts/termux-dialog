@@ -17,11 +17,11 @@ declare -a widgets=("confirm" "checkbox" "counter" "date" "radio" "sheet" "spinn
 
 # Descriptions for various options that multiple widgets can use
 OPT_HINT_DESC="[-i hint] text hint (optional)"
-OPT_MULTI_LINE_DESC="[-m multi-line] use a textarea with multiple lines instead of single (optional)"
-OPT_PASS_DESC="[-p password] enter input as password (optional)"
-OPT_TITLE_DESC="[-t title] dialog title (optional)"
-OPT_RANGE_DESC="[-r range] min,max,start where each value is a number (optional)"
-OPT_VALUES_DESC="[-v values] comma delimited string of values to use (required)"
+OPT_MULTI_LINE_DESC="[-m] multiple lines instead of single (optional)"
+OPT_PASS_DESC="[-p] enter input as password (optional)"
+OPT_TITLE_DESC="[-t title] set title of dialog (optional)"
+OPT_RANGE_DESC="[-r min,max,start] comma delim of (3) numbers to use (optional)"
+OPT_VALUES_DESC="[-v \",,,\"] comma delim values to use (required)"
 
 # Widget hints
 ARG_I=""
@@ -89,7 +89,7 @@ widget_usage () {
             echo "    $OPT_TITLE_DESC"
             ;;
         "sheet")
-            echo "Pick a value from a sliding bottom sheet interface"
+            echo "Pick a value from sliding bottom sheet"
             echo "    $OPT_VALUES_DESC"
             echo "    $OPT_TITLE_DESC"
             ;;
@@ -101,9 +101,10 @@ widget_usage () {
         "text")
             echo "Input text (default if no widget specified)"
             echo "    $OPT_HINT_DESC"
-            echo "    $OPT_PASS_DESC -- cannot use with -m"
             echo "    $OPT_TITLE_DESC"
-            echo "    $OPT_MULTI_LINE_DESC -- cannot use with -p"
+            echo "    $OPT_PASS_DESC*"
+            echo "    $OPT_MULTI_LINE_DESC*"
+            echo "       * cannot use [-m] with [-p]"
             ;;
         "time")
             echo "Pick a time value"
