@@ -6,10 +6,10 @@ DEFAULT_WIDGET="text"
 SCRIPTNAME=termux-dialog
 show_usage() {
     echo "Usage: $SCRIPTNAME widget [options]"
-    echo "Get user input w/ different widgets! Default Widget: $DEFAULT_WIDGET"
-    echo "   -h, help      Show this help"
-    echo "   -l, list      Full list all available widgets and their options"
-    echo "   -t, title     Set title of input dialog"
+    echo "Get user input w/ different widgets! Default: $DEFAULT_WIDGET"
+    echo "   -h, help   Show this help"
+    echo "   -l, list   List all widgets and their options"
+    echo "   -t, title  Set title of input dialog (optional)"
     exit 0
 }
 
