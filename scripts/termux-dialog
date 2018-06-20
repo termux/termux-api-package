@@ -174,9 +174,9 @@ elif ! has_widget $1; then
         echo -e "ERROR: Illegal argument $1\n"
         show_usage
     fi
-    WIDGET=$DEFAULT_WIDGET
+    WIDGET="$DEFAULT_WIDGET"
 else
-    WIDGET=$1
+    WIDGET="$1"
     shift
 fi
 
