@@ -13,7 +13,7 @@ show_usage() {
     exit 0
 }
 
-declare -a widgets=("confirm" "checkbox" "counter" "date" "radio" "sheet" "spinner" "text" "time")
+declare -a widgets=("confirm" "checkbox" "counter" "date" "radio" "sheet" "spinner" "speech" "text" "time")
 
 # Descriptions for various options that multiple widgets can use
 OPT_HINT_DESC="[-i hint] text hint (optional)"
@@ -99,6 +99,11 @@ widget_usage () {
         "sheet")
             echo "Pick a value from sliding bottom sheet"
             echo "    $OPT_VALUES_DESC"
+            echo "    $OPT_TITLE_DESC"
+            ;;
+        "speech")
+            echo "Obtain speech using device microphone"
+            echo "    $OPT_HINT_DESC"
             echo "    $OPT_TITLE_DESC"
             ;;
         "spinner")
@@ -219,11 +224,13 @@ case "$WIDGET" in
         fi
         ;;
 
-    "date" | "speech" | "time")
-        if [ $# -gt 0 ]; then
-            echo "ERROR: '$WIDGET' takes no arguments"; exit 1;
+    "speech")
+        if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
+            options_error $WIDGET
         fi
+        ;;
 
+    "date" | "time")
         if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
             options_error $WIDGET
         fi
