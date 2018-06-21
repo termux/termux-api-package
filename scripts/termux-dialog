@@ -74,8 +74,8 @@ widget_usage () {
     case "$1" in
         "confirm")
             echo "Show confirmation dialog"
-            echo "    $OPT_TITLE_DESC"
             echo "    $OPT_HINT_DESC"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "checkbox")
             echo "Select multiple values using checkboxes"
@@ -84,8 +84,8 @@ widget_usage () {
             ;;
         "counter")
             echo "Pick a number in specified range"
-            echo "    $OPT_TITLE_DESC"
             echo "    $OPT_RANGE_DESC"
+            echo "    $OPT_TITLE_DESC"
             ;;
         "date")
             echo "Pick a date"
@@ -109,10 +109,10 @@ widget_usage () {
         "text")
             echo "Input text (default if no widget specified)"
             echo "    $OPT_HINT_DESC"
-            echo "    $OPT_TITLE_DESC"
             echo "    $OPT_MULTI_LINE_DESC*"
             echo "    $OPT_NUMERIC_DESC*"
             echo "    $OPT_PASS_DESC"
+            echo "    $OPT_TITLE_DESC"
             echo "       * cannot use [-m] with [-n]"
             ;;
         "time")
