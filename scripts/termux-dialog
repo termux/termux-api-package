@@ -19,6 +19,7 @@ declare -a widgets=("confirm" "checkbox" "counter" "date" "radio" "sheet" "spinn
 OPT_HINT_DESC="[-i hint] text hint (optional)"
 OPT_MULTI_LINE_DESC="[-m] multiple lines instead of single (optional)"
 OPT_PASS_DESC="[-p] enter input as password (optional)"
+OPT_NUMERIC_DESC="[-n] enter input as numbers (optional)"
 OPT_TITLE_DESC="[-t title] set title of dialog (optional)"
 OPT_RANGE_DESC="[-r min,max,start] comma delim of (3) numbers to use (optional)"
 OPT_VALUES_DESC="[-v \",,,\"] comma delim values to use (required)"
@@ -29,6 +30,11 @@ OPT_I=""
 
 # Text widget multiline
 ARG_M=""
+OPT_M=""
+
+# Text widget numeric
+ARG_N=""
+OPT_N=""
 
 # Counter range
 ARG_R=""
@@ -36,6 +42,7 @@ OPT_R=""
 
 # Text widget input as password
 ARG_P=""
+OPT_P=""
 
 # Dialog title (supported by all widgets)
 ARG_T=""
@@ -55,6 +62,7 @@ MULTI_LINE_FLAG=2
 PASS_FLAG=4
 RANGE_FLAG=8
 VALUES_FLAG=16
+NUM_FLAG=32
 
 FLAGS=0
 
@@ -102,9 +110,10 @@ widget_usage () {
             echo "Input text (default if no widget specified)"
             echo "    $OPT_HINT_DESC"
             echo "    $OPT_TITLE_DESC"
-            echo "    $OPT_PASS_DESC*"
             echo "    $OPT_MULTI_LINE_DESC*"
-            echo "       * cannot use [-m] with [-p]"
+            echo "    $OPT_NUMERIC_DESC*"
+            echo "    $OPT_PASS_DESC"
+            echo "       * cannot use [-m] with [-n]"
             ;;
         "time")
             echo "Pick a time value"
@@ -142,14 +151,15 @@ set_flag () {
 # Convenience method to get all supported options, regardless of specified widget
 # NOTE: Option combination validation doesn't occur here
 parse_options() {
-    while getopts :hlmpr:i:t:v: option
+    while getopts :hlmnpr:i:t:v: option
     do
         case "$option" in
             h) show_usage ;;
             l) list_widgets; exit 0;;
             i) ARG_I="--es input_hint"; OPT_I="$OPTARG"; set_flag $HINT_FLAG; ;;
-            m) ARG_M="--ez multiple_lines true"; set_flag $MULTI_LINE_FLAG; ;;
-            p) ARG_P="--es input_type password"; set_flag $PASS_FLAG; ;;
+            m) ARG_M="--ez multiple_lines"; OPT_M="true"; set_flag $MULTI_LINE_FLAG; ;;
+            p) ARG_P="--ez password"; OPT_P="true"; set_flag $PASS_FLAG; ;;
+            n) ARG_N="--ez numeric"; OPT_N="true"; set_flag $NUM_FLAG; ;;
             t) ARG_T="--es input_title"; OPT_T="$OPTARG" ;;
             v) ARG_V="--es input_values"; OPT_V="$OPTARG"; set_flag $VALUES_FLAG; ;;
             r) ARG_R="--eia input_range"; OPT_R=$OPTARG; set_flag $RANGE_FLAG; ;;
@@ -192,19 +202,19 @@ case "$WIDGET" in
             options_error $WIDGET
         fi
 
-        if [ $((FLAGS & MULTI_LINE_FLAG)) -ne 0 ] && [ $((FLAGS & PASS_FLAG)) -ne 0 ]; then
+        if [ $((FLAGS & MULTI_LINE_FLAG)) -ne 0 ] && [ $((FLAGS & NUM_FLAG)) -ne 0 ]; then
             options_error $WIDGET
         fi
         ;;
 
     "confirm")
-        if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG))) -ne 0 ]; then
+        if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
             options_error $WIDGET
         fi
         ;;
 
     "counter")
-        if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | VALUES_FLAG))) -ne 0 ]; then
+        if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
             options_error $WIDGET
         fi
         ;;
@@ -214,7 +224,7 @@ case "$WIDGET" in
             echo "ERROR: '$WIDGET' takes no arguments"; exit 1;
         fi
 
-        if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG))) -ne 0 ]; then
+        if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
             options_error $WIDGET
         fi
         ;;
@@ -225,7 +235,7 @@ case "$WIDGET" in
             exit 1
         fi
 
-        if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG))) -ne 0 ]; then
+        if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | NUM_FLAG))) -ne 0 ]; then
             options_error $WIDGET
         fi
         ;;
@@ -248,8 +258,8 @@ if [ -n "$ARG_I" ]; then set -- "$@" $ARG_I "$OPT_I"; fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T"; fi
 if [ -n "$ARG_R" ]; then set -- "$@" $ARG_R "$OPT_R"; fi
 if [ -n "$ARG_V" ]; then set -- "$@" $ARG_V "$OPT_V"; fi
-if [ -n "$ARG_M" ]; then set -- "$@" $ARG_M ""; fi
-if [ -n "$ARG_P" ]; then set -- "$@" $ARG_P ""; fi
-
+if [ -n "$ARG_M" ]; then set -- "$@" $ARG_M "$OPT_M"; fi
+if [ -n "$ARG_P" ]; then set -- "$@" $ARG_P "$OPT_P"; fi
+if [ -n "$ARG_N" ]; then set -- "$@" $ARG_N "$OPT_N"; fi
 
 /data/data/com.termux/files/usr/libexec/termux-api Dialog "$@"
