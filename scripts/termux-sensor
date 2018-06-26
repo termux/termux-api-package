@@ -11,6 +11,7 @@ show_usage () {
 	echo "  -l, list           Show list of available sensors"
 	echo "  -s, sensors [,,,]  Sensors to listen to (can contain just partial name)"
 	echo "  -d, delay [ms]     Delay time in milliseconds before receiving new sensor update"
+	echo "  -n, limit [num]    Number of times to read sensor(s) (default: continuous) (min: 1)"
 	exit 0
 }
 
@@ -28,6 +29,7 @@ ALL_SENSORS_FLAG=2
 LIST_FLAG=4
 CLEANUP_FLAG=8
 DELAY_FLAG=16
+LIMIT_FLAG=32
 FLAGS=0
 
 handle_interrupt () {
@@ -58,6 +60,14 @@ get_delay () {
 	fi
 }
 
+get_limit () {
+	if [ $# -gt 1 ]; then
+		usage_error "Too many arguments for -n limit"
+	elif ! [[ $1 =~ ^[0-9]+$ ]]; then
+		usage_error "Illegal argument! -n limit arg should be a number!"
+	fi
+}
+
 call_api () {
 	/data/data/com.termux/files/usr/libexec/termux-api Sensor "$@"
 }
@@ -74,7 +84,7 @@ usage_error () {
 
 
 PARAMS=()
-while getopts :h,a,c,l,s:d: option
+while getopts :h,a,c,l,s:d:n: option
 do
 	case "$option" in
 		h) show_usage ;;
@@ -83,6 +93,7 @@ do
 		l) set_flag $LIST_FLAG; PARAMS=(-a list) ;;
 		s) set_flag $SENSOR_FLAG; get_sensors "$OPTARG"; PARAMS+=(-a sensors --es sensors "$OPTARG") ;;
 		d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS+=(--ei delay $OPTARG) ;;
+		n) set_flag $LIMIT_FLAG; get_limit $OPTARG; PARAMS+=(--ei limit $OPTARG) ;;
 		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
 	esac
 done
