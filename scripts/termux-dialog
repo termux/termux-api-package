@@ -53,7 +53,7 @@ OPT_T=""
 OPT_V=""
 ARG_V=""
 
-# Date output format (supported by date and time widgets)
+# Date output format (supported by date widget)
 ARG_D=""
 OPT_D=""
 
