@@ -3,20 +3,23 @@ set -u
 
 PARAM_LIMIT=10
 PARAM_OFFSET=0
+PARAM_TYPE=1
 PARAMS=""
 
 SCRIPTNAME=termux-sms-inbox
 show_usage () {
-    echo "Usage: termux-sms-inbox [-d] [-l limit] [-n] [-o offset]"
+    echo "Usage: termux-sms-inbox [-d] [-l limit] [-n] [-o offset] [-t type]"
     echo "List received SMS messages."
     echo "  -d         show dates when messages were created"
     echo "  -l limit   offset in sms list (default: $PARAM_LIMIT)"
     echo "  -n         show phone numbers"
     echo "  -o offset  offset in sms list (default: $PARAM_OFFSET)"
+    echo "  -t type    the type of messages to return (default: $PARAM_TYPE)"
+    echo "             0:ALL, 1:INBOX, 2:SENT, 3:DRAFT, 4:OUTBOX "
     exit 0
 }
 
-while getopts :hdl:no: option
+while getopts :hdlt:no: option
 do
     case "$option" in
         h) show_usage;;
@@ -24,6 +27,7 @@ do
         l) PARAM_LIMIT=$OPTARG;;
         n) PARAMS="$PARAMS --ez show-phone-numbers true";;
         o) PARAM_OFFSET=$OPTARG;;
+        t) PARAM_TYPE=$OPTARG;;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
@@ -31,5 +35,5 @@ shift $(($OPTIND-1))
 
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT"
+PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT --ei type $PARAM_TYPE"
 /data/data/com.termux/files/usr/libexec/termux-api SmsInbox $PARAMS
