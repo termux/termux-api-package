@@ -23,6 +23,7 @@ OPT_NUMERIC_DESC="[-n] enter input as numbers (optional)"
 OPT_TITLE_DESC="[-t title] set title of dialog (optional)"
 OPT_RANGE_DESC="[-r min,max,start] comma delim of (3) numbers to use (optional)"
 OPT_VALUES_DESC="[-v \",,,\"] comma delim values to use (required)"
+OPT_DATEFORMAT_DESC="[-d \"dd-MM-yyyy k:m:s\"] SimpleDateFormat Pattern for date widget output (optional)"
 
 # Widget hints
 ARG_I=""
@@ -51,6 +52,10 @@ OPT_T=""
 # Values for list-type widgets
 OPT_V=""
 ARG_V=""
+
+# Date output format (supported by date widget)
+ARG_D=""
+OPT_D=""
 
 # Widget type
 ARG_W=""
@@ -90,6 +95,7 @@ widget_usage () {
         "date")
             echo "Pick a date"
             echo "    $OPT_TITLE_DESC"
+            echo "    $OPT_DATEFORMAT_DESC"
             ;;
         "radio")
             echo "Pick a single value from radio buttons"
@@ -156,7 +162,7 @@ set_flag () {
 # Convenience method to get all supported options, regardless of specified widget
 # NOTE: Option combination validation doesn't occur here
 parse_options() {
-    while getopts :hlmnpr:i:t:v: option
+    while getopts :hlmnpr:i:t:d:v: option
     do
         case "$option" in
             h) show_usage ;;
@@ -166,6 +172,7 @@ parse_options() {
             p) ARG_P="--ez password"; OPT_P="true"; set_flag $PASS_FLAG; ;;
             n) ARG_N="--ez numeric"; OPT_N="true"; set_flag $NUM_FLAG; ;;
             t) ARG_T="--es input_title"; OPT_T="$OPTARG" ;;
+            d) ARG_D="--es date_format"; OPT_D="$OPTARG";;
             v) ARG_V="--es input_values"; OPT_V="$OPTARG"; set_flag $VALUES_FLAG; ;;
             r) ARG_R="--eia input_range"; OPT_R=$OPTARG; set_flag $RANGE_FLAG; ;;
             ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
@@ -268,5 +275,6 @@ if [ -n "$ARG_V" ]; then set -- "$@" $ARG_V "$OPT_V"; fi
 if [ -n "$ARG_M" ]; then set -- "$@" $ARG_M "$OPT_M"; fi
 if [ -n "$ARG_P" ]; then set -- "$@" $ARG_P "$OPT_P"; fi
 if [ -n "$ARG_N" ]; then set -- "$@" $ARG_N "$OPT_N"; fi
+if [ -n "$ARG_D" ]; then set -- "$@" $ARG_D "$OPT_D"; fi
 
 /data/data/com.termux/files/usr/libexec/termux-api Dialog "$@"
