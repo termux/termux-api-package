@@ -6,11 +6,11 @@ PARAM_OFFSET=0
 PARAM_TYPE=inbox
 PARAMS=""
 
-SCRIPTNAME=termux-sms-inbox
+SCRIPTNAME=termux-sms-list
 
 SUPPORTED_TYPES="all|inbox|sent|draft|outbox"
 show_usage () {
-    echo "Usage: termux-sms-inbox [-d] [-l limit] [-n] [-o offset] [-t type]"
+    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type]"
     echo "List SMS messages."
     echo "  -d         show dates when messages were created"
     echo "  -l limit   offset in sms list (default: $PARAM_LIMIT)"
