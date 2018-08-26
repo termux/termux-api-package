@@ -21,7 +21,7 @@ show_usage () {
     exit 0
 }
 
-while getopts :hdlt:no: option
+while getopts :hdl:t:no: option
 do
     case "$option" in
         h) show_usage;;
