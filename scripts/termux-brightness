@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-brightness
@@ -12,7 +12,13 @@ if [ $# != 1 ]; then
     show_usage
 fi
 
-if ! [[ $1 =~ ^[0-9]+$ ]]; then
+case "$1" in
+    ("" | *[!0-9]*)
+        echo "ERROR: Arg must be a number between 0 - 255!"
+        show_usage
+esac
+
+if [ "$1" -lt 0 ] || [ "$1" -gt 255 ]; then
     echo "ERROR: Arg must be a number between 0 - 255!"
     show_usage
 fi

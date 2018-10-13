@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e -u
 
 DEFAULT_WIDGET="text"
@@ -13,7 +13,7 @@ show_usage() {
     exit 0
 }
 
-declare -a widgets=("confirm" "checkbox" "counter" "date" "radio" "sheet" "spinner" "speech" "text" "time")
+widgets="confirm checkbox counter date radio sheet spinner speech text time"
 
 # Descriptions for various options that multiple widgets can use
 OPT_HINT_DESC="[-i hint] text hint (optional)"
@@ -74,7 +74,7 @@ FLAGS=0
 
 # Show usage help for specific widget
 widget_usage () {
-    echo -n -e "$1 - "
+    printf "%s - " "$1"
 
     case "$1" in
         "confirm")
@@ -141,7 +141,7 @@ list_widgets() {
     echo "Supported widgets:"
     echo
 
-    for w in "${widgets[@]}"; do
+    for w in ${widgets}; do
         widget_usage $w
         echo
     done
@@ -149,8 +149,8 @@ list_widgets() {
 
 # Checks to see if widgets array contains specified widget
 has_widget () {
-    for w in "${widgets[@]}"; do
-        [ "$w" == "$1" ] && return 0
+    for w in ${widgets}; do
+        [ "$w" = "$1" ] && return 0
     done
     return 1
 }
@@ -181,7 +181,8 @@ parse_options() {
 }
 
 options_error () {
-    echo -e "ERROR: Invalid option(s) detected for '$1'\n"
+    echo "ERROR: Invalid option(s) detected for '$1'"
+    echo
     echo "Usage '$1'"
     widget_usage $1
     exit 1
@@ -193,11 +194,15 @@ if [ $# -eq 0 ]; then
 elif ! has_widget $1; then
     # we didn't receive a widget as an argument, check to see if we
     # at least options (even if they're illegal)
-    if ! [[ $1 =~ -[a-z] ]]; then
-        echo -e "ERROR: Illegal argument $1\n"
-        show_usage
-    fi
-    WIDGET="$DEFAULT_WIDGET"
+    case "$1" in
+        -[a-z])
+            WIDGET="$DEFAULT_WIDGET"
+            ;;
+        *)
+            echo "ERROR: Illegal argument $1"
+            echo
+            show_usage
+    esac
 else
     WIDGET="$1"
     shift
@@ -244,7 +249,7 @@ case "$WIDGET" in
         ;;
 
     "checkbox" | "radio" | "sheet" | "spinner")
-        if [ "$ARG_V" == "" ]; then
+        if [ "$ARG_V" = "" ]; then
             echo "ERROR: '$WIDGET' must be called with $OPT_VALUES_DESC"
             exit 1
         fi

@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-volume
@@ -20,10 +20,11 @@ if [ $# -gt 0 ]; then
         show_usage
     fi
 
-    if ! [[ $2 =~ ^[0-9]+$ ]]; then
-        echo "ERROR: Volume must be a number"
-        show_usage
-    fi
+    case "$2" in
+        ("" | *[!0-9]*)
+            echo "ERROR: Volume must be a number"
+            show_usage
+    esac
     ARGS="-a set-volume --es stream $1 --ei volume $2"
 fi
 

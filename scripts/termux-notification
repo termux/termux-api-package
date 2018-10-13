@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e -u -f
 
 SCRIPTNAME=termux-notification
@@ -53,7 +53,7 @@ content:,help,id:,\
 led-color:,led-on:,led-off:,\
 on-delete:,\
 priority:,sound,title:,vibrate: \
-     -s bash \
+     -s sh \
      -- "$@"`
 eval set -- "$TEMP"
 
@@ -101,7 +101,7 @@ if [ -n "$OPT_SOUND" ]; then set -- "$@" --ez sound "$OPT_SOUND"; fi
 if [ -n "$OPT_TITLE" ]; then set -- "$@" --es title "$OPT_TITLE"; fi
 if [ -n "$OPT_VIBRATE" ]; then set -- "$@" --ela vibrate "$OPT_VIBRATE"; fi
 
-if [ -v OPT_CONTENT ]; then
+if [ ! -z ${OPT_CONTENT+x} ]; then
 	# Note that we want to accept an empty content (--content "").
 	echo ${OPT_CONTENT:=""} | /data/data/com.termux/files/usr/libexec/termux-api Notification "$@"
 else

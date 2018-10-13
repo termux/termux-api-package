@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-toast
@@ -19,10 +19,10 @@ while getopts :hsc:b:g: option
 do
     case "$option" in
         h) show_usage;;
-        s) PARAMS=" --ez short true";;
-        c) PARAMS+=" --es text_color $OPTARG";;
-        b) PARAMS+=" --es background $OPTARG";;
-        g) PARAMS+=" --es gravity $OPTARG";;
+        s) PARAMS="$PARAMS --ez short true";;
+        c) PARAMS="$PARAMS --es text_color $OPTARG";;
+        b) PARAMS="$PARAMS --es background $OPTARG";;
+        g) PARAMS="$PARAMS --es gravity $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done

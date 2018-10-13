@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-media-scan
@@ -12,14 +12,13 @@ show_usage () {
 
 get_paths() {
 	for ARG in "$@"; do
-		if [[ -e "$ARG" ]]; then
+		if [ -e "$ARG" ]; then
 			realpath "$ARG"
-		else 
-			if [[ "$ARG" =~ ^/ ]]; then
-				echo "$ARG"
-			else
-				echo "`pwd`/$ARG"
-			fi
+		else
+			case "$ARG" in
+				/*) echo "$ARG";;
+				*) echo "`pwd`/$ARG"
+			esac
 		fi
 	done
 }

@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e
 
 SCRIPTNAME=termux-microphone-record
@@ -15,6 +15,11 @@ show_usage () {
     echo "-q           Quits recording"
 }
 
+ARG_F=""
+OPT_F=""
+ARG_L=""
+OPT_L=""
+
 usage_error () {
     echo
     show_usage
@@ -28,50 +33,45 @@ sole() {
     fi
 }
 
-add_params() {
-    for i in "$@"; do
-        params[index++]="$i"
-    done
-}
-
 call_api () {
     /data/data/com.termux/files/usr/libexec/termux-api MicRecorder "$@"
+    exit 0
 }
 
 while getopts h,f:,l:,d,i,q option
 do
     case "$option" in
         h) sole "$@"
+           show_usage
+           exit 0
            ;;
-        f) record=yes
-           dir="$(dirname "$OPTARG")"
+        f) dir="$(dirname "$OPTARG")"
            file="$(basename "$OPTARG")"
            dir="$(realpath "$dir")"
-           add_params --es file "$dir/$file"
+           ARG_F="--es file"
+           OPT_F="$dir/$file"
            ;;
         # API takes limit in milliseconds
-        l) record=yes
-           add_params --ei limit $((OPTARG * 1000))
+        l) ARG_L="--ei limit"
+           OPT_L=$((OPTARG * 1000))
            ;;
-        d) record=yes
+        d) sole "$@"
+           call_api -a record
            ;;
         i) sole "$@"
-           add_params -a info
+           call_api -a info
            ;;
         q) sole "$@"
-           add_params -a quit
+           call_api -a quit
            ;;
         *) usage_error
            ;;
     esac
 done
 
-if [ -v record ]; then
-    add_params -a record
-fi
+set --
+if [ -n "$ARG_F" ]; then set -- "$@" $ARG_F "$OPT_F"; fi
+if [ -n "$ARG_L" ]; then set -- "$@" $ARG_L "$OPT_L"; fi
+set -- "$@" -a record
 
-if [ -v params ]; then
-    call_api "${params[@]}"
-else
-    show_usage
-fi
+call_api "$@"

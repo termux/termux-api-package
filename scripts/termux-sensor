@@ -1,5 +1,5 @@
-#!/data/data/com.termux/files/usr/bin/bash
-set -e -u
+#!/data/data/com.termux/files/usr/bin/sh
+set -e
 
 SCRIPTNAME=termux-sensor
 show_usage () {
@@ -16,7 +16,7 @@ show_usage () {
 }
 
 # ensure we properly release resources if needed on ^C
-trap handle_interrupt  SIGTERM SIGINT
+trap handle_interrupt  TERM INT
 
 if [ $# -eq 0 ]; then
 	echo "No arguments supplied!"
@@ -24,13 +24,14 @@ if [ $# -eq 0 ]; then
 	exit 1;
 fi
 
-SENSOR_FLAG=1
-ALL_SENSORS_FLAG=2
-LIST_FLAG=4
-CLEANUP_FLAG=8
-DELAY_FLAG=16
-LIMIT_FLAG=32
-FLAGS=0
+ARG_A=""
+OPT_A=""
+ARG_S=""
+OPT_S=""
+ARG_D=""
+OPT_D=""
+ARG_N=""
+OPT_N=""
 
 handle_interrupt () {
 	echo "Caught interrupt.. Finishing..."
@@ -38,7 +39,7 @@ handle_interrupt () {
 }
 
 cleanup () {
-	if [ $((FLAGS & (ALL_SENSORS_FLAG | SENSOR_FLAG))) != 0 ]; then
+	if [ -n "$ARG_A" ] || [ -n "$ARG_S" ]; then
 		echo "Performing sensor cleanup"
 		call_api -a cleanup
 	else
@@ -52,10 +53,17 @@ get_sensors () {
 	fi
 }
 
+is_number () {
+    case "$1" in
+    ("" | *[!0-9]*)
+        return 1
+	esac
+}
+
 get_delay () {
 	if [ $# -gt 1 ]; then
 		usage_error "Too many arguments for -d delay"
-	elif ! [[ $1 =~ ^[0-9]+$ ]]; then
+	elif ! is_number "$1"; then
 		usage_error "Illegal argument! -d delay arg should be a number!"
 	fi
 }
@@ -63,17 +71,14 @@ get_delay () {
 get_limit () {
 	if [ $# -gt 1 ]; then
 		usage_error "Too many arguments for -n limit"
-	elif ! [[ $1 =~ ^[0-9]+$ ]]; then
+	elif ! is_number "$1"; then
 		usage_error "Illegal argument! -n limit arg should be a number!"
 	fi
 }
 
 call_api () {
 	/data/data/com.termux/files/usr/libexec/termux-api Sensor "$@"
-}
-
-set_flag () {
-	FLAGS=$((FLAGS | $1));
+	exit 0
 }
 
 usage_error () {
@@ -82,33 +87,41 @@ usage_error () {
 	exit 1
 }
 
+sole() {
+    if [ "$1 $2" != "-$option $OPTARG" ] || [ $# -gt 2 ]; then
+        echo "ERROR: No other options should be specified with -$option!"
+        usage_error
+    fi
+}
 
-PARAMS=()
+
 while getopts :h,a,c,l,s:d:n: option
 do
 	case "$option" in
 		h) show_usage ;;
-		a) set_flag $ALL_SENSORS_FLAG; PARAMS+=(-a sensors --ez all true);;
-		c) set_flag $CLEANUP_FLAG; PARAMS=(-a cleanup) ;;
-		l) set_flag $LIST_FLAG; PARAMS=(-a list) ;;
-		s) set_flag $SENSOR_FLAG; get_sensors "$OPTARG"; PARAMS+=(-a sensors --es sensors "$OPTARG") ;;
-		d) set_flag $DELAY_FLAG; get_delay $OPTARG; PARAMS+=(--ei delay $OPTARG) ;;
-		n) set_flag $LIMIT_FLAG; get_limit $OPTARG; PARAMS+=(--ei limit $OPTARG) ;;
+		a) ARG_A="--ez all"; OPT_A="true" ;;
+		c) sole "$@"; call_api -a cleanup ;;
+		l) sole "$@"; call_api -a list ;;
+		s) get_sensors "$OPTARG"; ARG_S="--es sensors"; OPT_S="$OPTARG" ;;
+		d) get_delay $OPTARG; ARG_D="--ei delay"; OPT_D="$OPTARG" ;;
+		n) get_limit $OPTARG; ARG_N="--ei limit"; OPT_N="$OPTARG" ;;
 		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
 	esac
 done
-shift $((OPTIND -1))
 
 # Validate options were set properly
 
-if [ $((FLAGS & CLEANUP_FLAG)) -ne 0 ] && [ $FLAGS -ne $CLEANUP_FLAG ]; then
-	usage_error "No other options should be specified with -c cleanup!"
-elif [ $((FLAGS & LIST_FLAG)) -ne 0 ] && [ $FLAGS -ne $LIST_FLAG ]; then
-	usage_error "No other options should be specified with -l list!"
-elif [ $((FLAGS & DELAY_FLAG)) -ne 0 ] && [ $((FLAGS & (ALL_SENSORS_FLAG | SENSOR_FLAG))) -eq 0 ]; then
-	usage_error "Use -s <sensors> or -a option when using -d delay!"
-elif [ $((FLAGS & ALL_SENSORS_FLAG)) -ne 0 ] && [ $((FLAGS & SENSOR_FLAG)) -ne 0 ]; then
+if [ -n "$ARG_A" ] && [ -n "$ARG_S" ]; then
 	usage_error "Listed sensors will be ignored with -a all option!"
+elif [ -n "$ARG_D" ] && ! ([ -n "$ARG_A" ] || [ -n "$ARG_S" ]); then
+	usage_error "Use -s <sensors> or -a option when using -d delay!"
 fi
 
-call_api "${PARAMS[@]}"
+set --
+if [ -n "$ARG_A" ]; then set -- "$@" $ARG_A "$OPT_A"; fi
+if [ -n "$ARG_S" ]; then set -- "$@" $ARG_S "$OPT_S"; fi
+if [ -n "$ARG_D" ]; then set -- "$@" $ARG_D "$OPT_D"; fi
+if [ -n "$ARG_N" ]; then set -- "$@" $ARG_N "$OPT_N"; fi
+set -- "$@" -a sensors
+
+call_api "$@"
