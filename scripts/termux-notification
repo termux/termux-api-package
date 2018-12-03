@@ -4,7 +4,7 @@ set -e -u -f
 SCRIPTNAME=termux-notification
 show_usage () {
     echo "Usage: termux-notification [options]"
-    echo "Display a system notification. Context text is read from stdin or specified using --content."
+    echo "Display a system notification. Content text is read from stdin or specified using --content."
     echo "  --action action          action to execute when pressing the notification"
     echo "  --button1 text           text to show on the first notification button"
     echo "  --button1-action action  action to execute on the first notification button"
