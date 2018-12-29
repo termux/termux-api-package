@@ -8,7 +8,7 @@ PARAMS=""
 SCRIPTNAME=termux-call-log
 
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-o offset]"
+    echo "Usage: $SCRIPTNAME [-l limit] [-o offset]"
     echo "List call log history"
     echo "  -l limit   offset in call log list (default: $PARAM_LIMIT)"
     echo "  -o offset  offset in call log list (default: $PARAM_OFFSET)"
