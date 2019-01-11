@@ -4,19 +4,19 @@ set -e -u -f
 SCRIPTNAME=termux-job-scheduler
 
 show_usage () {
-    echo "Usage: termux-job-scheduler [options]"
-    echo "Schedule a Termux script to run later, or periodically"
-    echo "  --script                 path to the Termux script to be called"
-    echo "  --job-id int             job id (will overwrite any previous job with the same id)"        
-    echo "  --pending boolean        list pending jobs only (default false)"
-    echo "  --period_ms int          schedule job approximately every period_ms milliseconds (default 0 means once)"
-    echo "  --network                run only when this type of network available, default none (any|unmetered|cellular|not_roaming|none)"
-    echo "  --battery-not-low boolean   run only when battery is not low, default true (at least Androi O)"
-    echo "  --storage-not-low boolean   run only when storage is not low, default false (at least Androi O)"
-    echo "  --charging boolean       run only when charging, default false"
-    echo "  --trigger-content-uri text   (at least Android N)"
-    echo "  --trigger-content-flag int   default 1, (at least Android N)"
-    exit 0
+	echo "Usage: termux-job-scheduler [options]"
+	echo "Schedule a script to run at specificied time(s)."
+	echo "  --script                   path to the script to be called"
+	echo "  --job-id int               job id (will overwrite any previous job with the same id)"
+	echo "  --pending boolean          list pending jobs only (default false)"
+	echo "  --period-ms int            schedule job approximately every period-ms milliseconds (default 0 means once)"
+	echo "  --network                  run only when this type of network available, default none (any|unmetered|cellular|not_roaming|none)"
+	echo "  --battery-not-low boolean  run only when battery is not low, default true (at least Androi O)"
+	echo "  --storage-not-low boolean  run only when storage is not low, default false (at least Androi O)"
+	echo "  --charging boolean         run only when charging, default false"
+	echo "  --trigger-content-uri text (at least Android N)"
+	echo "  --trigger-content-flag int default 1, (at least Android N)"
+	exit 0
 }
 
 OPT_SCRIPT=""
