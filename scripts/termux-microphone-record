@@ -10,7 +10,11 @@ show_usage () {
     echo "-h           Shows this help"
     echo "-d           Start recording w/ defaults"
     echo "-f <file>    Start recording to specific file"
-    echo "-l <limit>   Start recording w/ specified limit (in seconds)"
+    echo "-l <limit>   Start recording w/ specified limit (in seconds, unlimited for 0)"
+    echo "-e <encoder> Start recording w/ specified encoder (aac, amr_wb, amr_nb)"
+    echo "-b <bitrate> Start recording w/ specified bitrate (in kbps)"
+    echo "-r <rate>    Start recording w/ specified sampling rate (in Hz)"
+    echo "-c <count>   Start recording w/ specified channel count (1, 2, ...)"
     echo "-i           Get info about current recording"
     echo "-q           Quits recording"
 }
@@ -38,7 +42,7 @@ call_api () {
     /data/data/com.termux/files/usr/libexec/termux-api MicRecorder "$@"
 }
 
-while getopts h,f:,l:,d,i,q option
+while getopts h,f:,l:,e:,b:,r:,c:,d,i,q option
 do
     case "$option" in
         h) sole "$@"
@@ -54,6 +58,19 @@ do
            add_params --ei limit $((OPTARG * 1000))
            ;;
         d) record=yes
+           ;;
+        e) record=yes
+           add_params --es encoder "$OPTARG"
+           ;;
+        # API takes bitrate in bps
+        b) record=yes
+           add_params --ei bitrate $((OPTARG * 1000))
+           ;;
+        r) record=yes
+           add_params --ei srate $((OPTARG))
+           ;;
+        c) record=yes
+           add_params --ei channels $((OPTARG))
            ;;
         i) sole "$@"
            add_params -a info
