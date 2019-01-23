@@ -5,6 +5,7 @@ termux-api: termux-api.c
 
 install: termux-api
 	mkdir -p $(PREFIX)/bin/ $(PREFIX)/libexec/
+	strip --strip-unneeded --preserve-dates termux-api
 	install termux-api $(PREFIX)/libexec/
 	install scripts/* $(PREFIX)/bin/
 
