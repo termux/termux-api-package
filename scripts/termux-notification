@@ -12,7 +12,7 @@ show_usage () {
     echo "  --button2-action action  action to execute on the second notification button"
     echo "  --button3 text           text to show on the third notification button"
     echo "  --button3-action action  action to execute on the third notification button"
-    echo "  --content content        content to show in the notification. Read from stdin not specified here."
+    echo "  --content content        content to show in the notification. Will take precedence over stdin."
     echo "  --id id                  notification id (will overwrite any previous notification with the same id)"
     echo "  --led-color rrggbb       color of the blinking led as RRGGBB (default: none)"
     echo "  --led-on milliseconds    number of milliseconds for the LED to be on while it's flashing (default: 800)"
