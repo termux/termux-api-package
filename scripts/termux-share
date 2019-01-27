@@ -42,8 +42,16 @@ shift $(($OPTIND-1))
 if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
 if [ $# != 0 ]; then
+    FILE="$1"
+    if [ -f "$FILE" ]; then
+        FILE=`realpath "$FILE"`
+    fi
+
+    # Fix for issues on Android 8.1.
+    FILE=$(echo "$FILE" | sed 's/^\///')
+
     # Note that the file path can contain whitespace.
-    /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS --es file "`realpath "$1"`"
+    /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS --es file "$FILE"
 else
     /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS
 fi
