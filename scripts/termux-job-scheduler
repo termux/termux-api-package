@@ -5,14 +5,17 @@ SCRIPTNAME=termux-job-scheduler
 
 show_usage () {
 	echo "Usage: termux-job-scheduler [options]"
-	echo "Schedule a script to run at specificied time(s)."
-	echo "  --script                   path to the script to be called"
+	echo "Schedule a script to run at specified intervals."
+	echo "  --pending                  list pending jobs and exit (default false)"
+	echo "  --cancel-all boolean       cancel all pending jobs and exit (default false)"
+	echo "  --cancel boolean           cancel given job-id and exit (default false)"
+	echo "Options for scheduling:"
+	echo "  --script text              path to the script to be called"
 	echo "  --job-id int               job id (will overwrite any previous job with the same id)"
-	echo "  --pending boolean          list pending jobs only (default false)"
 	echo "  --period-ms int            schedule job approximately every period-ms milliseconds (default 0 means once)"
-	echo "  --network                  run only when this type of network available, default none (any|unmetered|cellular|not_roaming|none)"
-	echo "  --battery-not-low boolean  run only when battery is not low, default true (at least Androi O)"
-	echo "  --storage-not-low boolean  run only when storage is not low, default false (at least Androi O)"
+	echo "  --network text             run only when this type of network available, default none (any|unmetered|cellular|not_roaming|none)"
+	echo "  --battery-not-low boolean  run only when battery is not low, default true (at least Android O)"
+	echo "  --storage-not-low boolean  run only when storage is not low, default false (at least Android O)"
 	echo "  --charging boolean         run only when charging, default false"
 	echo "  --trigger-content-uri text (at least Android N)"
 	echo "  --trigger-content-flag int default 1, (at least Android N)"
@@ -22,6 +25,9 @@ show_usage () {
 OPT_SCRIPT=""
 OPT_JOB_ID=""
 OPT_PENDING=""
+OPT_CANCEL=""
+OPT_CANCEL_ALL=""
+
 OPT_PERIOD_MS=""
 OPT_NETWORK=""
 OPT_BATTERY_NOT_LOW=""
@@ -34,7 +40,8 @@ TEMP=`busybox getopt \
      -n $SCRIPTNAME \
      -o hs:p \
      --long script:,\
-job-id:,pending:,\
+job-id:,pending,\
+cancel,cancel-all,\
 period-ms:,network:,\
 battery-not-low:,storage-not-low:,\
 charging:,help,\
@@ -47,7 +54,9 @@ while true; do
 	case "$1" in
 		-s | --script) OPT_SCRIPT="$2"; shift 2;;
 		--job-id) OPT_JOB_ID="$2"; shift 2;;
-		-p | --pending) OPT_PENDING="$2"; shift 2;;
+		-p | --pending) OPT_PENDING=1; shift;;
+		--cancel) OPT_CANCEL=1; shift;;
+		--cancel-all) OPT_CANCEL_ALL=1; shift;;
 		--period-ms) OPT_PERIOD_MS="$2"; shift 2;;
 		--network) OPT_NETWORK="$2"; shift 2;;
 		--battery-not-low) OPT_BATTERY_NOT_LOW="$2"; shift 2;;
@@ -55,7 +64,7 @@ while true; do
 		--charging) OPT_CHARGING="$2"; shift 2;;
 		--trigger-content-flag) OPT_TRIGGER_CONTENT_FLAG="$2"; shift 2;;
 		--trigger-content-uri) OPT_TRIGGER_CONTENT_URI="$2"; shift 2;;
-		-h | --help) show_usage;;		
+		-h | --help) show_usage;;
 		--) shift; break ;;
 	esac
 done
@@ -66,6 +75,8 @@ set --
 if [ -n "$OPT_SCRIPT" ]; then set -- "$@" --es script "$OPT_SCRIPT"; fi
 if [ -n "$OPT_JOB_ID" ]; then set -- "$@" --ei job_id "$OPT_JOB_ID"; fi
 if [ -n "$OPT_PENDING" ]; then set -- "$@" --ez pending "$OPT_PENDING"; fi
+if [ -n "$OPT_CANCEL" ]; then set -- "$@" --ez cancel "$OPT_CANCEL"; fi
+if [ -n "$OPT_CANCEL_ALL" ]; then set -- "$@" --ez cancel_all "$OPT_CANCEL_ALL"; fi
 if [ -n "$OPT_PERIOD_MS" ]; then set -- "$@" --ei period_ms "$OPT_PERIOD_MS"; fi
 if [ -n "$OPT_NETWORK" ]; then set -- "$@" --es network "$OPT_NETWORK"; fi
 if [ -n "$OPT_BATTERY_NOT_LOW" ]; then set -- "$@" --ez battery_not_low "$OPT_BATTERY_NOT_LOW"; fi
