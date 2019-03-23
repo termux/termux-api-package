@@ -19,7 +19,7 @@ while getopts :hsc:b:g: option
 do
     case "$option" in
         h) show_usage;;
-        s) PARAMS=" --ez short true";;
+        s) PARAMS+=" --ez short true";;
         c) PARAMS+=" --es text_color $OPTARG";;
         b) PARAMS+=" --es background $OPTARG";;
         g) PARAMS+=" --es gravity $OPTARG";;
