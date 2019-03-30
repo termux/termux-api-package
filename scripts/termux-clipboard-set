@@ -21,6 +21,6 @@ CMD="/data/data/com.termux/files/usr/libexec/termux-api Clipboard -e api_version
 if [ $# = 0 ]; then
 	$CMD
 else
-	echo $@ | $CMD
+	echo -n "$@" | $CMD
 fi
 
