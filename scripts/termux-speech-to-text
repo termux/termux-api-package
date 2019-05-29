@@ -8,10 +8,12 @@ show_usage () {
     exit 0
 }
 
-while getopts :h option
+show_progress=false
+while getopts :hp option
 do
     case "$option" in
         h) show_usage;;
+        p) show_progress=true;;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
@@ -19,4 +21,9 @@ shift $(($OPTIND-1))
 
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-/data/data/com.termux/files/usr/libexec/termux-api SpeechToText
+CMD=/data/data/com.termux/files/usr/libexec/termux-api
+if [ $show_progress = true ]; then
+  $CMD SpeechToText
+else
+  $CMD SpeechToText | tail -1
+fi
