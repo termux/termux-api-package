@@ -141,4 +141,10 @@ if [ -n "$OPT_TITLE" ]; then set -- "$@" --es title "$OPT_TITLE"; fi
 if [ -n "$OPT_TYPE" ]; then set -- "$@" --es type "$OPT_TYPE"; fi
 if [ -n "$OPT_VIBRATE" ]; then set -- "$@" --ela vibrate "$OPT_VIBRATE"; fi
 
-echo "$OPT_CONTENT" | /data/data/com.termux/files/usr/libexec/termux-api Notification "$@"
+if [ -n "$OPT_CONTENT"  ] || [ -t 0 ]; then
+	# we either have some content, so it takes precedence over STDIN
+	# or have no STDIN, so we must use content even if empty
+	echo "$OPT_CONTENT" | /data/data/com.termux/files/usr/libexec/termux-api Notification "$@"
+else # use STDIN
+	/data/data/com.termux/files/usr/libexec/termux-api Notification "$@"
+fi
