@@ -13,7 +13,7 @@ show_usage () {
 	echo "  --script text              path to the script to be called"
 	echo "  --job-id int               job id (will overwrite any previous job with the same id)"
 	echo "  --period-ms int            schedule job approximately every period-ms milliseconds (default 0 means once)"
-	echo "  --network text             run only when this type of network available, default none (any|unmetered|cellular|not_roaming|none)"
+	echo "  --network text             run only when this type of network available (default any): any|unmetered|cellular|not_roaming|none"
 	echo "  --battery-not-low boolean  run only when battery is not low, default true (at least Android O)"
 	echo "  --storage-not-low boolean  run only when storage is not low, default false (at least Android O)"
 	echo "  --charging boolean         run only when charging, default false"
