@@ -6,9 +6,9 @@ SCRIPTNAME=termux-job-scheduler
 show_usage () {
 	echo "Usage: termux-job-scheduler [options]"
 	echo "Schedule a script to run at specified intervals."
-	echo "  --pending                  list pending jobs and exit (default false)"
-	echo "  --cancel-all boolean       cancel all pending jobs and exit (default false)"
-	echo "  --cancel boolean           cancel given job-id and exit (default false)"
+	echo "  --pending                  list pending jobs and exit"
+	echo "  --cancel-all               cancel all pending jobs and exit"
+	echo "  --cancel                   cancel given job-id and exit"
 	echo "Options for scheduling:"
 	echo "  --script text              path to the script to be called"
 	echo "  --job-id int               job id (will overwrite any previous job with the same id)"
