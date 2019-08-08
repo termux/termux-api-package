@@ -4,7 +4,8 @@ set -e -u -f
 SCRIPTNAME=termux-notification
 show_usage () {
     echo "Usage: termux-notification [options]"
-    echo "Display a system notification. Content text is specified using -c/--content or read from stdin ."
+    echo "Display a system notification. Content text is specified using -c/--content or read from stdin."
+    echo "Please read --help-actions for help with action arguments."
     echo "  --action action          action to execute when pressing the notification"
     echo "  --alert-once             do not alert when the notification is edited"
     echo "  --button1 text           text to show on the first notification button"
@@ -16,6 +17,7 @@ show_usage () {
     echo "  -c/--content content     content to show in the notification. Will take precedence over stdin."
     echo "  --group group            notification group (notifications with the same group are shown together)"
     echo "  -h/--help                show this help"
+    echo "  --help-actions           show the help for actions"
     echo "  -i/--id id               notification id (will overwrite any previous notification with the same id)"
     echo "  --image-path path        absolute path to an image which will be shown in the notification"
     echo "  --led-color rrggbb       color of the blinking led as RRGGBB (default: none)"
@@ -34,6 +36,28 @@ show_usage () {
     echo "  --media-play             action to execute on the media-play button"
     echo "  --media-previous         action to execute on the media-previous button"
     exit 0
+}
+
+show_help_actions () {
+    echo "This help refers to the arguments to options like --action, --on-delete, --button-1-action and --media-next."
+    echo
+    echo "All these commands take an action string as their argument, which is fed to \`dash -c\`."
+    echo "A few important things must be kept in mind when using actions:"
+    echo
+    echo "You should use actions that do things outside of the terminal, like --action \"termux-toast hello\"."
+    echo "Anything that outputs to the terminal is useless, so the output should either be redirected (--action \"ls > ~/ls.txt\") or shown to the user in a different way (--action \"ls|termux-toast\")."
+    echo
+    echo "Running more than one command in a single action is as easy as"
+    echo "--action \"command1; command2; command3\""
+    echo "or"
+    echo "--action \"if [ -e file ]; then termux-toast yes; else termux-toast no; fi\"."
+    echo
+    echo "For anything more complex, you should put your script in a file, make it executable, and use that as the action:"
+    echo "--action ~/bin/script"
+    echo
+    echo "The action is run in a different environment (not a subshell). Thus your environment is lost (most notably \$PATH), and ~/.profile is not sourced either. So if you need your \$PATH you should either:"
+    echo " - if the action is a script, set it explicitly in the script (e.g. export PATH=\"\$HOME/bin:\$PATH\")"
+    echo " - or use something like --action \"bash -l -c 'command1; command2'\")."
 }
 
 OPT_ACTION=""
@@ -70,7 +94,7 @@ TEMP=`busybox getopt \
 button1:,button1-action:,\
 button2:,button2-action:,\
 button3:,button3-action:,\
-content:,group:,help,id:,image-path:\
+content:,group:,help,help-actions,id:,image-path:\
 led-color:,led-on:,led-off:,\
 media-previous:,media-next:,media-play:,media-pause:,\
 on-delete:,ongoing,\
@@ -93,6 +117,7 @@ while true; do
 		-c | --content) OPT_CONTENT="$2"; shift 2;;
 		--group) OPT_GROUP="$2"; shift 2;;
 		-h | --help) show_usage;;
+		--help-actions) show_help_actions; exit 0;;
 		-i | --id) OPT_ID="$2"; shift 2;;
 		--image-path) OPT_IMAGE_PATH="$2"; shift 2;;
 		--led-color) OPT_LED_COLOR="$2"; shift 2;;
