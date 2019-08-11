@@ -6,11 +6,11 @@ SCRIPTNAME=termux-job-scheduler
 show_usage () {
 	echo "Usage: termux-job-scheduler [options]"
 	echo "Schedule a script to run at specified intervals."
-	echo "  --pending                  list pending jobs and exit"
+	echo "  -p/--pending               list pending jobs and exit"
 	echo "  --cancel-all               cancel all pending jobs and exit"
 	echo "  --cancel                   cancel given job-id and exit"
 	echo "Options for scheduling:"
-	echo "  --script text              path to the script to be called"
+	echo "  -s/--script path           path to the script to be called"
 	echo "  --job-id int               job id (will overwrite any previous job with the same id)"
 	echo "  --period-ms int            schedule job approximately every period-ms milliseconds (default 0 means once)."
 	echo "                             Note that since Android N, the minimum period is 900.000ms (15 minutes)."
