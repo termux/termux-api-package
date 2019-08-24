@@ -94,7 +94,7 @@ TEMP=`busybox getopt \
 button1:,button1-action:,\
 button2:,button2-action:,\
 button3:,button3-action:,\
-content:,group:,help,help-actions,id:,image-path:\
+content:,group:,help,help-actions,id:,image-path:,\
 led-color:,led-on:,led-off:,\
 media-previous:,media-next:,media-play:,media-pause:,\
 on-delete:,ongoing,\
