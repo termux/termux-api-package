@@ -7,7 +7,7 @@ show_usage () {
     echo "Display a system notification. Content text is specified using -c/--content or read from stdin."
     echo "Please read --help-actions for help with action arguments."
     echo "  --action action          action to execute when pressing the notification"
-    echo "  --alert-once             do not alert when the notification is edited"
+    echo "  --alert-always           alert when the notification is edited"
     echo "  --button1 text           text to show on the first notification button"
     echo "  --button1-action action  action to execute on the first notification button"
     echo "  --button2 text           text to show on the second notification button"
@@ -61,7 +61,7 @@ show_help_actions () {
 }
 
 OPT_ACTION=""
-OPT_ALERT_ONCE=""
+OPT_ALERT_ALWAYS=""
 OPT_BUTTON1_ACTION=""
 OPT_BUTTON1_TEXT=""
 OPT_BUTTON2_ACTION=""
@@ -90,7 +90,7 @@ OPT_VIBRATE=""
 TEMP=`busybox getopt \
      -n $SCRIPTNAME \
      -o hc:i:t: \
-     --long action:,alert-once,\
+     --long action:,alert-always,\
 button1:,button1-action:,\
 button2:,button2-action:,\
 button3:,button3-action:,\
@@ -107,7 +107,7 @@ eval set -- "$TEMP"
 while true; do
 	case "$1" in
 		--action) OPT_ACTION="$2"; shift 2;;
-		--alert-once) OPT_ALERT_ONCE="true"; shift 1;;
+		--alert-always) OPT_ALERT_ALWAYS="false"; shift 1;;
 		--button1) OPT_BUTTON1_TEXT="$2"; shift 2;;
 		--button1-action) OPT_BUTTON1_ACTION="$2"; shift 2;;
 		--button2) OPT_BUTTON2_TEXT="$2"; shift 2;;
@@ -148,7 +148,7 @@ fi
 
 set --
 if [ -n "$OPT_ACTION" ]; then set -- "$@" --es action "$OPT_ACTION"; fi
-if [ -n "$OPT_ALERT_ONCE" ]; then set -- "$@" --ez alert-once "$OPT_ALERT_ONCE"; fi
+if [ -n "$OPT_ALERT_ALWAYS" ]; then set -- "$@" --ez alert-once "$OPT_ALERT_ALWAYS"; fi
 if [ -n "$OPT_BUTTON1_ACTION" ]; then set -- "$@" --es button_action_1 "$OPT_BUTTON1_ACTION"; fi
 if [ -n "$OPT_BUTTON1_TEXT" ]; then set -- "$@" --es button_text_1 "$OPT_BUTTON1_TEXT"; fi
 if [ -n "$OPT_BUTTON2_ACTION" ]; then set -- "$@" --es button_action_2 "$OPT_BUTTON2_ACTION"; fi
