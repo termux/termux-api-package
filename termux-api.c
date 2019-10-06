@@ -66,6 +66,15 @@ _Noreturn void exec_am_broadcast(int argc, char** argv, char* input_address_stri
     exit(1);
 }
 
+_Noreturn void exec_callback(int fd)
+{
+    char *fds;
+    if(asprintf(&fds, "%d", fd) == -1) { perror("asprintf"); }
+    execl("/data/data/com.termux/files/usr/libexec/termux-callback", "termux-callback", fds, NULL);
+    perror("execl(\"/data/data/com.termux/files/usr/libexec/termux-callback\")");
+    exit(1);
+}
+
 void generate_uuid(char* str) {
     sprintf(str, "%x%x-%x-%x-%x-%x%x%x",
             arc4random(), arc4random(),                 // Generates a 64-bit Hex number
@@ -93,13 +102,32 @@ void* transmit_stdin_to_socket(void* arg) {
 }
 
 // Main thread function which reads from input socket and writes to stdout.
-void transmit_socket_to_stdout(int input_socket_fd) {
+int transmit_socket_to_stdout(int input_socket_fd) {
     ssize_t len;
     char buffer[1024];
-    while ((len = read(input_socket_fd, &buffer, sizeof(buffer))) > 0) {
+    char cbuf[256];
+    struct iovec io = { .iov_base = buffer, .iov_len = sizeof(buffer) };
+    struct msghdr msg = { 0 };
+    int fd = -1;  // An optional file descriptor received through the socket
+    msg.msg_iov = &io;
+    msg.msg_iovlen = 1;
+    msg.msg_control = cbuf;
+    msg.msg_controllen = sizeof(cbuf);
+    while ((len = recvmsg(input_socket_fd, &msg, 0)) > 0) {
+        struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg);
+        if (cmsg && cmsg->cmsg_len == CMSG_LEN(sizeof(int))) {
+            if (cmsg->cmsg_type == SCM_RIGHTS) {
+                fd = *((int *) CMSG_DATA(cmsg));
+            }
+        }
+        // A file descriptor must be accompanied by a non-empty message,
+        // so we use "@" when we don't want any output.
+        if (fd != -1 && len == 1 && buffer[0] == '@') { len = 0; }
         write(STDOUT_FILENO, buffer, len);
+        msg.msg_controllen = sizeof(cbuf);
     }
-    if (len < 0) perror("read()");
+    if (len < 0) perror("recvmsg()");
+    return fd;
 }
 
 int main(int argc, char** argv) {
@@ -149,7 +177,9 @@ int main(int argc, char** argv) {
     pthread_t transmit_thread;
     pthread_create(&transmit_thread, NULL, transmit_stdin_to_socket, &output_server_socket);
 
-    transmit_socket_to_stdout(input_client_socket);
+    int fd = transmit_socket_to_stdout(input_client_socket);
+    close(input_client_socket);
+    if (fd != -1) { exec_callback(fd); }
 
     return 0;
 }
