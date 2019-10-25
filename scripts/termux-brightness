@@ -17,7 +17,7 @@ if ! [[ $1 =~ ^([0-9]+)|auto$ ]]; then
     show_usage
 fi
 
-if [ $1 == auto ]; then
+if [ "$1" == auto ]; then
 ARGS="--ez auto true"
 else
 ARGS="--ei brightness $1 --ez auto false"

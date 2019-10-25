@@ -18,7 +18,7 @@ do
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ -z "$RECIPIENTS" ]; then
     echo "$SCRIPTNAME: no recipient number given"; exit 1;
@@ -28,5 +28,5 @@ CMD="/data/data/com.termux/files/usr/libexec/termux-api SmsSend $RECIPIENTS"
 if [ $# = 0 ]; then
     $CMD
 else
-    echo $@ | $CMD
+    echo "$@" | $CMD
 fi

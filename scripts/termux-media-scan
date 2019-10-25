@@ -18,7 +18,7 @@ get_paths() {
 			if [[ "$ARG" =~ ^/ ]]; then
 				echo "$ARG"
 			else
-				echo "`pwd`/$ARG"
+				echo "$(pwd)/$ARG"
 			fi
 		fi
 	done
@@ -34,7 +34,7 @@ do
 		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
 	esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ $# = 0 ]; then echo "$SCRIPTNAME: missing file argument"; exit 1; fi
 

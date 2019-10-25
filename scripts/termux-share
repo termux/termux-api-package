@@ -30,14 +30,14 @@ while getopts :ha:c:dt: option
 do
     case "$option" in
         h) show_usage;;
-        a) validate_share $OPTARG; PARAMS="$PARAMS --es action $OPTARG";;
+        a) validate_share "$OPTARG"; PARAMS="$PARAMS --es action $OPTARG";;
         c) PARAMS="$PARAMS --es content-type $OPTARG";;
         d) PARAMS="$PARAMS --ez default-receiver true";;
         t) PARAMS="$PARAMS --es title $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 

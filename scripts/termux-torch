@@ -16,9 +16,9 @@ fi
 
 PARAMS=""
 
-if [ $1 = 'on' ]; then
+if [ "$1" = on ]; then
 	PARAMS="--ez enabled true"
-elif [ $1 = 'off' ]; then
+elif [ "$1" = off ]; then
 	PARAMS="--ez enabled false"
 else
 	echo "Illegal parameter: $1"

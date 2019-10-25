@@ -38,12 +38,12 @@ do
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 CMD="/data/data/com.termux/files/usr/libexec/termux-api TextToSpeech $PARAMS"
 if [ $# = 0 ]; then
     $CMD
 else
-    echo $@ | $CMD
+    echo "$@" | $CMD
 fi
 

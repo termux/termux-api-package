@@ -142,7 +142,7 @@ list_widgets() {
     echo
 
     for w in "${widgets[@]}"; do
-        widget_usage $w
+        widget_usage "$w"
         echo
     done
 }
@@ -183,14 +183,14 @@ parse_options() {
 options_error () {
     echo -e "ERROR: Invalid option(s) detected for '$1'\n"
     echo "Usage '$1'"
-    widget_usage $1
+    widget_usage "$1"
     exit 1
 }
 
 if [ $# -eq 0 ]; then
     WIDGET=$DEFAULT_WIDGET
 # First argument wasn't a widget
-elif ! has_widget $1; then
+elif ! has_widget "$1"; then
     # we didn't receive a widget as an argument, check to see if we
     # at least options (even if they're illegal)
     if ! [[ $1 =~ -[a-z] ]]; then
@@ -211,35 +211,35 @@ case "$WIDGET" in
     # Text (default) if no widget specified
     "text")
         if [ $((FLAGS & (RANGE_FLAG | VALUES_FLAG))) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
 
         if [ $((FLAGS & MULTI_LINE_FLAG)) -ne 0 ] && [ $((FLAGS & NUM_FLAG)) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
         ;;
 
     "confirm")
         if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
         ;;
 
     "counter")
         if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
         ;;
 
     "speech")
         if [ $((FLAGS & (MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
         ;;
 
     "date" | "time")
         if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | VALUES_FLAG | NUM_FLAG))) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
         ;;
 
@@ -250,7 +250,7 @@ case "$WIDGET" in
         fi
 
         if [ $((FLAGS & (HINT_FLAG | MULTI_LINE_FLAG | PASS_FLAG | RANGE_FLAG | NUM_FLAG))) -ne 0 ]; then
-            options_error $WIDGET
+            options_error "$WIDGET"
         fi
         ;;
 

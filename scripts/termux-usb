@@ -26,7 +26,7 @@ do
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ $MASK -eq 3 ]; then echo "$SCRIPTNAME: -l cannot be combined with other options"; exit 1; fi
 

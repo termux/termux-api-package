@@ -18,7 +18,7 @@ do
 	?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ -z "$FREQUENCY" ]; then echo "$SCRIPTNAME: No frequency specified"; exit 1; fi
 

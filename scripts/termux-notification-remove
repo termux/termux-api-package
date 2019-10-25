@@ -15,8 +15,8 @@ do
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ $# != 1 ]; then echo "$SCRIPTNAME: no notification id specified"; exit 1; fi
 
-/data/data/com.termux/files/usr/libexec/termux-api NotificationRemove --es id $1
+/data/data/com.termux/files/usr/libexec/termux-api NotificationRemove --es id "$1"
