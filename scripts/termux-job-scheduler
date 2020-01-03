@@ -18,6 +18,7 @@ show_usage () {
 	echo "  --battery-not-low boolean  run only when battery is not low, default true (at least Android O)"
 	echo "  --storage-not-low boolean  run only when storage is not low, default false (at least Android O)"
 	echo "  --charging boolean         run only when charging, default false"
+	echo "  --persisted boolean        should the job survive reboots, default false"
 	echo "  --trigger-content-uri text (at least Android N)"
 	echo "  --trigger-content-flag int default 1, (at least Android N)"
 	exit 0
@@ -34,6 +35,7 @@ OPT_NETWORK=""
 OPT_BATTERY_NOT_LOW=""
 OPT_STORAGE_NOT_LOW=""
 OPT_CHARGING=""
+OPT_PERSISTED=""
 OPT_TRIGGER_CONTENT_URI=""
 OPT_TRIGGER_CONTENT_FLAG=""
 
@@ -45,7 +47,7 @@ job-id:,pending,\
 cancel,cancel-all,\
 period-ms:,network:,\
 battery-not-low:,storage-not-low:,\
-charging:,help,\
+charging:,persisted:,help,\
 trigger_content_flag:,trigger-content-uri: \
      -s bash \
      -- "$@"`
@@ -63,6 +65,7 @@ while true; do
 		--battery-not-low) OPT_BATTERY_NOT_LOW="$2"; shift 2;;
 		--storage-not-low) OPT_STORAGE_NOT_LOW="$2"; shift 2;;
 		--charging) OPT_CHARGING="$2"; shift 2;;
+		--persisted) OPT_PERSISTED="$2"; shift 2;;
 		--trigger-content-flag) OPT_TRIGGER_CONTENT_FLAG="$2"; shift 2;;
 		--trigger-content-uri) OPT_TRIGGER_CONTENT_URI="$2"; shift 2;;
 		-h | --help) show_usage;;
@@ -83,6 +86,7 @@ if [ -n "$OPT_NETWORK" ]; then set -- "$@" --es network "$OPT_NETWORK"; fi
 if [ -n "$OPT_BATTERY_NOT_LOW" ]; then set -- "$@" --ez battery_not_low "$OPT_BATTERY_NOT_LOW"; fi
 if [ -n "$OPT_STORAGE_NOT_LOW" ]; then set -- "$@" --ez storage_not_low "$OPT_STORAGE_NOT_LOW"; fi
 if [ -n "$OPT_CHARGING" ]; then set -- "$@" --ez charging "$OPT_CHARGING"; fi
+if [ -n "$OPT_PERSISTED" ]; then set -- "$@" --ez persisted "$OPT_PERSISTED"; fi
 if [ -n "$OPT_TRIGGER_CONTENT_URI" ]; then set -- "$@" --es trigger_content_uri "$OPT_TRIGGER_CONTENT_URI"; fi
 if [ -n "$OPT_TRIGGER_CONTENT_FLAG" ]; then set -- "$@" --ez trigger_content_flag "$OPT_TRIGGER_CONTENT_FLAG"; fi
 
