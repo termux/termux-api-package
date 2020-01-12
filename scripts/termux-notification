@@ -58,6 +58,14 @@ show_help_actions () {
     echo "The action is run in a different environment (not a subshell). Thus your environment is lost (most notably \$PATH), and ~/.profile is not sourced either. So if you need your \$PATH you should either:"
     echo " - if the action is a script, set it explicitly in the script (e.g. export PATH=\"\$HOME/bin:\$PATH\")"
     echo " - or use something like --action \"bash -l -c 'command1; command2'\")."
+    echo
+    echo "On Android N or above, you can use the special variable \$REPLY in your actions to use Android's Direct Reply feature."
+    echo "This prompts the user to enter some text directly in the notification, which is then substituted into your action."
+    echo " - termux-notification --button1 \"Answer\" --button1-action \"termux-toast \\\$REPLY\""
+    echo "will call the action:"
+    echo " - termux-toast \"Some text entered by the user\""
+    echo "Be careful to escape shell commands correctly for single or double quotes, e.g."
+    echo "  --button1-action 'something \$REPLY' or --button1-action \"something \\\$REPLY\""
 }
 
 OPT_ACTION=""
