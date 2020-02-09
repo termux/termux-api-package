@@ -1,0 +1,35 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+install()
+{
+    am start -a android.intent.action.INSTALL_PACKAGE -d "file://$(realpath $@)"
+}
+
+uninstall()
+{
+    am start -a android.intent.action.UNINSTALL_PACKAGE -d package:"$@"
+}
+
+show_usage()
+{
+    echo "Usage:"
+    echo -e "\ttermux-apk install /path/to/apk"
+    echo -e "\ttermux-apk uninstall [PACKAGE]"
+}
+
+if [ "$#" != "2" ]
+then
+    show_usage
+elif [ "$1" != "install" ] && [ "$1" != "uninstall" ]
+then
+    show_usage
+elif [ "$1" == "install" ] && [ ! -f "$2" ]
+then
+    echo "$2 does not exist"
+elif [ "$1" == "install" ]
+then
+     install "$2"
+elif [ "$1" == "uninstall" ]
+then
+    uninstall "$2"
+fi
