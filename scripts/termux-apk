@@ -29,7 +29,7 @@ show_usage()
 
 if [ $# != 2 ]
 then
-       show_usage
+    show_usage
 fi
 
 while getopts ":i:u:" options
