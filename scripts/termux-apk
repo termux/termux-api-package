@@ -16,6 +16,7 @@ install()
 uninstall()
 {
     am start -a android.intent.action.UNINSTALL_PACKAGE -d package:"$1"
+    return $?
 }
 
 show_usage()
