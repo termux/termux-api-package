@@ -1,0 +1,50 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+install()
+{
+    apk="$(realpath $@)"
+    if [ ! -f "$apk" ]
+    then
+	echo "$apk does not exist"
+	exit 1
+    fi
+    am start -a android.intent.action.INSTALL_PACKAGE -d "file://$apk"
+}
+
+uninstall()
+{
+    am start -a android.intent.action.UNINSTALL_PACKAGE -d package:"$@"
+}
+
+show_usage()
+{
+    echo "Usage: termux-apk [command] [apk/package]"
+    echo -e "\t-i: Install an apk. Following argument must be the path to an apk"
+    echo -e "\t-u: Uninstall a package. Following argument must be a package name."
+    exit 1
+}
+
+
+if [ $# != 2 ]
+then
+       show_usage
+fi
+
+while getopts ":i:u:" options
+do
+    case "$options" in
+	i)
+	    APP=${OPTARG}
+	    function=install
+	    ;;
+	u)
+	    APP=${OPTARG}
+	    function=uninstall
+	    ;;
+	*)
+	    show_usage
+	    ;;
+    esac
+done
+
+eval $function "$APP"
