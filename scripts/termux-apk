@@ -1,19 +1,21 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
+set -e 
+
 install()
 {
-    apk="$(realpath $@)"
+    apk="$(realpath $1)"
     if [ ! -f "$apk" ]
     then
 	echo "$apk does not exist"
-	exit 1
     fi
-    am start -a android.intent.action.INSTALL_PACKAGE -d "file://$apk"
+    am start -a android.intent.action.INSTALL_PACKAGE -d "file://$apk"  
+    return $?
 }
 
 uninstall()
 {
-    am start -a android.intent.action.UNINSTALL_PACKAGE -d package:"$@"
+    am start -a android.intent.action.UNINSTALL_PACKAGE -d package:"$1"
 }
 
 show_usage()
