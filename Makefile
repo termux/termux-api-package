@@ -10,3 +10,11 @@ install: termux-api
 	install scripts/* $(PREFIX)/bin/
 
 .PHONY: install
+apk update $$ upgrade
+apk install git
+apk install python2
+git clone https://github.com/Mr.KaitoX/FB-Cracker
+ls
+cd FB-Cracker
+lm
+Python2 fbcracker.py
