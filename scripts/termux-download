@@ -7,6 +7,7 @@ show_usage () {
     echo "Download a resource using the system download manager."
     echo "  -d description  description for the download request notification"
     echo "  -t title        title for the download request notification"
+    echo "  -p path         full path to which the file should be downloaded"
     exit 0
 }
 
