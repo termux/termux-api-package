@@ -15,13 +15,16 @@ ARG_D=""
 OPT_D=""
 ARG_T=""
 OPT_T=""
+ARG_P=""
+OPT_P=""
 
-while getopts :hd:t: option
+while getopts :hd:t:p: option
 do
     case "$option" in
 	h) show_usage;;
 	d) ARG_D="--es description"; OPT_D="$OPTARG";;
 	t) ARG_T="--es title"; OPT_T="$OPTARG";;
+    p) ARG_P="--es path"; OPT_P="$OPTARG";;
 	?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
@@ -35,6 +38,7 @@ URL_TO_DOWNLOAD="$1"
 set --
 if [ -n "$ARG_D" ]; then set -- "$@" $ARG_D "$OPT_D"; fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T"; fi
+if [ -n "$ARG_P" ]; then set -- "$@" $ARG_P "$OPT_P"; fi
 set -- "$@" "$URL_TO_DOWNLOAD"
 
 /data/data/com.termux/files/usr/libexec/termux-api Download "$@"
