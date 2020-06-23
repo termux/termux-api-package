@@ -24,7 +24,7 @@ do
 	h) show_usage;;
 	d) ARG_D="--es description"; OPT_D="$OPTARG";;
 	t) ARG_T="--es title"; OPT_T="$OPTARG";;
-    p) ARG_P="--es path"; OPT_P="$OPTARG";;
+        p) ARG_P="--es path"; OPT_P="$OPTARG";;
 	?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
