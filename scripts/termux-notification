@@ -98,7 +98,7 @@ OPT_TITLE=""
 OPT_TYPE=""
 OPT_VIBRATE=""
 
-TEMP=`busybox getopt \
+TEMP=`getopt \
      -n $SCRIPTNAME \
      -o hc:i:t: \
      --long action:,alert-once,\
