@@ -39,7 +39,7 @@ OPT_PERSISTED=""
 OPT_TRIGGER_CONTENT_URI=""
 OPT_TRIGGER_CONTENT_FLAG=""
 
-TEMP=`busybox getopt \
+TEMP=`getopt \
      -n $SCRIPTNAME \
      -o hs:p \
      --long script:,\
