@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u
 
 SCRIPTNAME=termux-volume
@@ -27,4 +27,4 @@ if [ $# -gt 0 ]; then
     ARGS="-a set-volume --es stream $1 --ei volume $2"
 fi
 
-/data/data/com.termux/files/usr/libexec/termux-api Volume $ARGS
+@TERMUX_PREFIX@/libexec/termux-api Volume $ARGS

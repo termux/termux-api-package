@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e
 
 SCRIPTNAME=termux-media-player
@@ -15,7 +15,7 @@ show_usage () {
 }
 
 main() {
-    /data/data/com.termux/files/usr/libexec/termux-api MediaPlayer "$@"
+    @TERMUX_PREFIX@/libexec/termux-api MediaPlayer "$@"
 }
 
 case "$1" in

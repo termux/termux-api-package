@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u
 
 SCRIPTNAME=termux-usb
@@ -39,7 +39,7 @@ else
     PARAMS="$PARAMS --es device $1"
 fi
 
-CMD="/data/data/com.termux/files/usr/libexec/termux-api Usb -a $ACTION $PARAMS"
+CMD="@TERMUX_PREFIX@/libexec/termux-api Usb -a $ACTION $PARAMS"
 
 if [ "$ACTION" == "permission" ]
 then

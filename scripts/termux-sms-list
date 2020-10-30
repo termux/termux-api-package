@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -u
 
 PARAM_LIMIT=10
@@ -47,4 +47,4 @@ case "$PARAM_TYPE" in
 esac
 
 PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT --ei type $PARAM_TYPE"
-/data/data/com.termux/files/usr/libexec/termux-api SmsInbox $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api SmsInbox $PARAMS

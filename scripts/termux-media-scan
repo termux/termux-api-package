@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u
 
 SCRIPTNAME=termux-media-scan
@@ -39,4 +39,4 @@ shift $((OPTIND-1))
 if [ $# = 0 ]; then echo "$SCRIPTNAME: missing file argument"; exit 1; fi
 
 PATHS=`get_paths "$@" | sed ':a;N;$!ba;s/,/\\\\,/g;s/\n/,/g'`
-/data/data/com.termux/files/usr/libexec/termux-api MediaScanner $PARAMS "$PATHS"
+@TERMUX_PREFIX@/libexec/termux-api MediaScanner $PARAMS "$PATHS"

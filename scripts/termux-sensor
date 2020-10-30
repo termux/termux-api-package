@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u
 
 SCRIPTNAME=termux-sensor
@@ -69,7 +69,7 @@ get_limit () {
 }
 
 call_api () {
-	/data/data/com.termux/files/usr/libexec/termux-api Sensor "$@"
+	@TERMUX_PREFIX@/libexec/termux-api Sensor "$@"
 }
 
 set_flag () {

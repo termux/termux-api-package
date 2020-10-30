@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u
 
 SCRIPTNAME=termux-brightness
@@ -23,4 +23,4 @@ else
 ARGS="--ei brightness $1 --ez auto false"
 fi
 
-/data/data/com.termux/files/usr/libexec/termux-api Brightness $ARGS
+@TERMUX_PREFIX@/libexec/termux-api Brightness $ARGS

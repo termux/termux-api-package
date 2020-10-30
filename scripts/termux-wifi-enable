@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-wifi-enable
@@ -18,4 +18,4 @@ case $1 in
         *) show_usage;;
 esac
 
-/data/data/com.termux/files/usr/libexec/termux-api WifiEnable --ez enabled "$1"
+@TERMUX_PREFIX@/libexec/termux-api WifiEnable --ez enabled "$1"

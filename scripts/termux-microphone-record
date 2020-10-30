@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e
 
 SCRIPTNAME=termux-microphone-record
@@ -39,7 +39,7 @@ add_params() {
 }
 
 call_api () {
-    /data/data/com.termux/files/usr/libexec/termux-api MicRecorder "$@"
+    @TERMUX_PREFIX@/libexec/termux-api MicRecorder "$@"
 }
 
 while getopts h,f:,l:,e:,b:,r:,c:,d,i,q option

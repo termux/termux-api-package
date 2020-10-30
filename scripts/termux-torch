@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-torch
@@ -25,4 +25,4 @@ else
 	show_usage
 fi
 
-/data/data/com.termux/files/usr/libexec/termux-api Torch $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api Torch $PARAMS

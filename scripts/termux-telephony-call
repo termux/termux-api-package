@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-telephony-call
@@ -18,7 +18,7 @@ done
 shift $((OPTIND-1))
 
 if [ $# = 1 ]; then
-	/data/data/com.termux/files/usr/libexec/termux-api TelephonyCall --es number "$1"
+	@TERMUX_PREFIX@/libexec/termux-api TelephonyCall --es number "$1"
 else
 	echo "$SCRIPTNAME: No single number to call specified." >&2
 	exit 1

@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-share
@@ -48,7 +48,7 @@ if [ $# != 0 ]; then
     fi
 
     # Note that the file path can contain whitespace.
-    /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS --es file "$(realpath "$1")"
+    @TERMUX_PREFIX@/libexec/termux-api Share $PARAMS --es file "$(realpath "$1")"
 else
-    /data/data/com.termux/files/usr/libexec/termux-api Share $PARAMS
+    @TERMUX_PREFIX@/libexec/termux-api Share $PARAMS
 fi

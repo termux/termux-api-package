@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 
 set -e
 
@@ -49,4 +49,4 @@ set --
 [ -n "$OPT_LS" ]   && set -- "$@" --ez lockscreen "$OPT_LS"
 [ -n "$OPT_FILE" ] && set -- "$@" --es file "$OPT_FILE"
 [ -n "$OPT_URL" ]  && set -- "$@" --es url "$OPT_URL"
-/data/data/com.termux/files/usr/libexec/termux-api Wallpaper "$@"
+@TERMUX_PREFIX@/libexec/termux-api Wallpaper "$@"

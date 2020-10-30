@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-tts-speak
@@ -40,7 +40,7 @@ do
 done
 shift $((OPTIND-1))
 
-CMD="/data/data/com.termux/files/usr/libexec/termux-api TextToSpeech $PARAMS"
+CMD="@TERMUX_PREFIX@/libexec/termux-api TextToSpeech $PARAMS"
 if [ $# = 0 ]; then
     $CMD
 else

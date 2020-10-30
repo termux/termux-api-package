@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-download
@@ -41,4 +41,4 @@ if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T"; fi
 if [ -n "$ARG_P" ]; then set -- "$@" $ARG_P "$OPT_P"; fi
 set -- "$@" "$URL_TO_DOWNLOAD"
 
-/data/data/com.termux/files/usr/libexec/termux-api Download "$@"
+@TERMUX_PREFIX@/libexec/termux-api Download "$@"

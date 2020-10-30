@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-clipboard-set
@@ -17,7 +17,7 @@ do
 done
 shift $((OPTIND-1))
 
-CMD="/data/data/com.termux/files/usr/libexec/termux-api Clipboard -e api_version 2 --ez set true"
+CMD="@TERMUX_PREFIX@/libexec/termux-api Clipboard -e api_version 2 --ez set true"
 if [ $# = 0 ]; then
 	$CMD
 else

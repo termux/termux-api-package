@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u -f
 
 SCRIPTNAME=termux-notification
@@ -190,7 +190,7 @@ if [ -n "$OPT_VIBRATE" ]; then set -- "$@" --ela vibrate "$OPT_VIBRATE"; fi
 if [ -n "$OPT_CONTENT"  ] || [ -t 0 ]; then
 	# we either have some content, so it takes precedence over STDIN
 	# or have no STDIN, so we must use content even if empty
-	echo "$OPT_CONTENT" | /data/data/com.termux/files/usr/libexec/termux-api Notification "$@"
+	echo "$OPT_CONTENT" | @TERMUX_PREFIX@/libexec/termux-api Notification "$@"
 else # use STDIN
-	/data/data/com.termux/files/usr/libexec/termux-api Notification "$@"
+	@TERMUX_PREFIX@/libexec/termux-api Notification "$@"
 fi

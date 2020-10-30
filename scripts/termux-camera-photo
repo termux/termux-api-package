@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!@TERMUX_PREFIX@/bin/sh
 set -e -u
 
 SCRIPTNAME=termux-camera-photo
@@ -27,4 +27,4 @@ if [ $# != 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 touch "$1"
 PARAMS="$PARAMS --es file `realpath $1`"
 
-/data/data/com.termux/files/usr/libexec/termux-api CameraPhoto $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api CameraPhoto $PARAMS
