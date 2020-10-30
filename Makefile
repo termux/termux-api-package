@@ -8,8 +8,8 @@ install: termux-api
 	install termux-api $(PREFIX)/libexec/
 	install termux-callback $(PREFIX)/libexec/
 	for i in scripts/*; do \
-	  sed -e "s|@TERMUX_PREFIX@|$(PREFIX)|g" $i $(PREFIX)/bin/$i; \
-	  chmod 700 $(PREFIX)/bin/$i; \
+	  sed -e "s|@TERMUX_PREFIX@|$(PREFIX)|g" $$i > $(PREFIX)/bin/$$i; \
+	  chmod 700 $(PREFIX)/bin/$$i; \
 	done
 
 .PHONY: install
