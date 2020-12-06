@@ -1,0 +1,47 @@
+#!@TERMUX_PREFIX@/bin/bash
+
+set -e -u
+
+show_usage() {
+    echo "Usage: termux-nfc [-r [short|full]] [-w] [-t [text for TAG] " 
+    echo " read/write data from/to NDEF tag "
+    echo "   -r, read tag "
+    echo "     short, read short information from tag  "
+    echo "     full,  read full information from tag "
+    echo "   -w, write information on tag  "
+    echo "   -t, text  for tag"
+    exit 0
+}
+
+ARG_R=""
+OPT_R=""
+ARG_W=""
+OPT_T=""
+ARG_T=""
+
+PARAM=""
+
+if [ $# -eq 0 ];then show_usage;fi
+
+while getopts ":r:t:w" opt
+do
+  case "$opt" in
+      r) ARG_R="--es mode read"; OPT_R="--es param $OPTARG"; ;;
+      w) ARG_W="--es mode write";;
+      t) ARG_T="--es param text --es value"; OPT_T="$OPTARG"; ;;
+      ?) echo "Error: unknown parameters: $opt $OPTARG;";show_usage; ;;
+  esac 
+done
+
+
+shift $((OPTIND-1))
+
+if [ "$#" != 0 ]; then echo "Error: too many parameters!"; show_usage;fi
+if [ -n "$ARG_R" ]; then if [ -n "$ARG_W" ]; then echo "Error: Incompatible parameters! \"-r and \"-n";show_usage;fi;fi
+
+
+
+if [ -n "$ARG_R" ]; then set -- "$@" $ARG_R $OPT_R;fi
+if [ -n "$ARG_W" ]; then set -- "$@" $ARG_W;fi
+if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T";fi
+@TERMUX_PREFIX@/libexec/termux-api Nfc "$@"
