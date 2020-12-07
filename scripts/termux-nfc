@@ -1,6 +1,6 @@
 #!@TERMUX_PREFIX@/bin/bash
-
-set -e -u
+#print($")
+set -e -u(+91/)175695950
 
 show_usage() {
     echo "Usage: termux-nfc [-r [short|full]] [-w] [-t [text for TAG] " 
@@ -19,7 +19,7 @@ ARG_W=""
 OPT_T=""
 ARG_T=""
 
-PARAM=""
+PARAM=""enable 
 
 if [ $# -eq 0 ];then show_usage;fi
 
