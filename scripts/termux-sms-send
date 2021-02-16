@@ -3,18 +3,21 @@ set -e -u
 
 SCRIPTNAME=termux-sms-send
 show_usage () {
-    echo "Usage: $SCRIPTNAME -n number[,number2,number3,...] [text]"
+    echo "Usage: $SCRIPTNAME -n number[,number2,number3,...] [-s slot] [text]"
     echo "Send a SMS message to the specified recipient number(s). The text to send is either supplied as arguments or read from stdin if no arguments are given."
     echo "  -n number(s)  recipient number(s) - separate multiple numbers by commas"
+    echo "  -s sim slot to use"
     exit 0
 }
 
 RECIPIENTS=""
-while getopts :hn: option
+SLOT=""
+while getopts :hn:s: option
 do
     case "$option" in
         h) show_usage;;
         n) RECIPIENTS="--esa recipients $OPTARG";;
+        s) SLOT="--ei slot $OPTARG ";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
@@ -24,7 +27,7 @@ if [ -z "$RECIPIENTS" ]; then
     echo "$SCRIPTNAME: no recipient number given"; exit 1;
 fi
 
-CMD="@TERMUX_PREFIX@/libexec/termux-api SmsSend $RECIPIENTS"
+CMD="@TERMUX_PREFIX@/libexec/termux-api SmsSend $RECIPIENTS $SLOT"
 if [ $# = 0 ]; then
     $CMD
 else
