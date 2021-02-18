@@ -6,7 +6,7 @@ show_usage () {
     echo "Usage: $SCRIPTNAME -n number[,number2,number3,...] [-s slot] [text]"
     echo "Send a SMS message to the specified recipient number(s). The text to send is either supplied as arguments or read from stdin if no arguments are given."
     echo "  -n number(s)  recipient number(s) - separate multiple numbers by commas"
-    echo "  -s sim slot to use"
+    echo "  -s slot       sim slot to use - silently fails if slot number is invalid or if missing READ_PHONE_STATE permission"
     exit 0
 }
 
