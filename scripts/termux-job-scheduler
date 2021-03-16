@@ -48,7 +48,7 @@ cancel,cancel-all,\
 period-ms:,network:,\
 battery-not-low:,storage-not-low:,\
 charging:,persisted:,help,\
-trigger_content_flag:,trigger_content_uri: \
+trigger-content-flag:,trigger-content-uri: \
      -s bash \
      -- "$@"`
 eval set -- "$TEMP"
