@@ -3,7 +3,7 @@ set -u
 
 PARAM_LIMIT=10
 PARAM_OFFSET=0
-PARAM_TYPE= all
+PARAM_TYPE=all
 PARAM_NUMBER=""
 PARAMS=""
 
@@ -11,7 +11,7 @@ SCRIPTNAME=termux-sms-list
 
 SUPPORTED_TYPES="all|inbox|sent|draft|outbox"
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type]"
+    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type] [-c] [-f number]"
     echo "List SMS messages."
     echo "  -l limit   offset in sms list (default: $PARAM_LIMIT)"
     echo "  -o offset  offset in sms list (default: $PARAM_OFFSET)"
@@ -25,7 +25,7 @@ show_usage () {
     exit 0
 }
 
-while getopts :hdl:t:no: option
+while getopts :hdl:tf:cno: option
 do
     case "$option" in
         h) show_usage;;
@@ -34,9 +34,8 @@ do
         n) PARAMS="$PARAMS --ez show-phone-numbers true";;
         o) PARAM_OFFSET=$OPTARG;;
         t) PARAM_TYPE=$OPTARG;;
-
-        u) PARAMS="$PARAMS --ez conversation-list true";;
-        f) PARAM_NUMBER=" --es from $OPTARG";;
+        c) PARAMS="$PARAMS --ez conversation-list true";;
+        f) PARAM_NUMBER="--es from $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
