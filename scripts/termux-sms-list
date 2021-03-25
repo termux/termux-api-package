@@ -3,7 +3,8 @@ set -u
 
 PARAM_LIMIT=10
 PARAM_OFFSET=0
-PARAM_TYPE=inbox
+PARAM_TYPE= all
+PARAM_NUMBER=""
 PARAMS=""
 
 SCRIPTNAME=termux-sms-list
@@ -12,12 +13,15 @@ SUPPORTED_TYPES="all|inbox|sent|draft|outbox"
 show_usage () {
     echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type]"
     echo "List SMS messages."
-    echo "  -d         show dates when messages were created"
     echo "  -l limit   offset in sms list (default: $PARAM_LIMIT)"
-    echo "  -n         show phone numbers"
     echo "  -o offset  offset in sms list (default: $PARAM_OFFSET)"
     echo "  -t type    the type of messages to list (default: $PARAM_TYPE):"
     echo "             $SUPPORTED_TYPES"
+    echo "  -c         conversation list (unique item per conversation)"
+    echo "  -f number  the number for locate messages"
+
+    echo "  -n         (obsolete) show phone numbers"
+    echo "  -d         (obsolete) show dates when messages were created"
     exit 0
 }
 
@@ -30,6 +34,9 @@ do
         n) PARAMS="$PARAMS --ez show-phone-numbers true";;
         o) PARAM_OFFSET=$OPTARG;;
         t) PARAM_TYPE=$OPTARG;;
+
+        u) PARAMS="$PARAMS --ez conversation-list true";;
+        f) PARAM_NUMBER=" --es from $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
@@ -46,5 +53,5 @@ case "$PARAM_TYPE" in
 	*) echo "$SCRIPTNAME: Unsupported type '$PARAM_TYPE'. Use one of: $SUPPORTED_TYPES"; exit 1 ;;
 esac
 
-PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT --ei type $PARAM_TYPE"
+PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT --ei type $PARAM_TYPE $PARAM_NUMBER"
 @TERMUX_PREFIX@/libexec/termux-api SmsInbox $PARAMS
