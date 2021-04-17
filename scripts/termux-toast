@@ -3,35 +3,46 @@ set -e -u
 
 SCRIPTNAME=termux-toast
 show_usage () {
-    echo "Usage: termux-toast [-b bgcolor] [-c color] [-g gravity] [-s] [text]"
-    echo "Show text in a Toast (a transient popup). The text to show is either supplied as arguments or read from stdin if no arguments are given."
-    echo " -h  show this help"
-    echo " -b  set background color (default: gray)"
-    echo " -c  set text color (default: white)"
-    echo " -g  set position of toast: [top, middle, or bottom] (default: middle)"
-    echo " -s  only show the toast for a short while"
-    echo "NOTE: color can be a standard name (i.e. red) or 6 / 8 digit hex value (i.e. \"#FF0000\" or \"#FFFF0000\") where order is (AA)RRGGBB. Invalid color will revert to default value"
-    exit 0
+	echo "Usage: termux-toast [-b bgcolor] [-c color] [-g gravity] [-s] [text]"
+	echo "Show text in a Toast (a transient popup)."
+	echo "The toast text is either supplied as arguments or read from stdin"
+	echo "if no arguments are given. Arguments will take precedence over stdin."
+	echo "If toast text is not passed as arguments or with stdin, then there will"
+	echo "be a 3s delay."
+	echo " -h  show this help"
+	echo " -b  set background color (default: gray)"
+	echo " -c  set text color (default: white)"
+	echo " -g  set position of toast: [top, middle, or bottom] (default: middle)"
+	echo " -s  only show the toast for a short while"
+	echo "NOTE: color can be a standard name (i.e. red) or 6 / 8 digit hex value (i.e. \"#FF0000\" or \"#FFFF0000\") where order is (AA)RRGGBB. Invalid color will revert to default value"
+	exit 0
 }
 
 PARAMS=""
 while getopts :hsc:b:g: option
 do
-    case "$option" in
-        h) show_usage;;
-        s) PARAMS+=" --ez short true";;
-        c) PARAMS+=" --es text_color $OPTARG";;
-        b) PARAMS+=" --es background $OPTARG";;
-        g) PARAMS+=" --es gravity $OPTARG";;
-        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
-    esac
+	case "$option" in
+		h) show_usage;;
+		s) PARAMS+=" --ez short true";;
+		c) PARAMS+=" --es text_color $OPTARG";;
+		b) PARAMS+=" --es background $OPTARG";;
+		g) PARAMS+=" --es gravity $OPTARG";;
+		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+	esac
 done
 shift $((OPTIND-1))
 
 CMD="@TERMUX_PREFIX@/libexec/termux-api Toast $PARAMS"
 
+# If toast text was not passed as an argument, then attempt to read from STDIN with a 3s timeout
+# Toast text arguments takes precedence over STDIN
 if [ $# = 0 ]; then
-    $CMD
+	set +e; IFS= read -t 3 -r -d '' TOAST_TEXT; set -e;
 else
-    echo "$@" | $CMD
+	TOAST_TEXT="$*"
 fi
+
+# Trim trailing newlines
+TOAST_TEXT="$(echo "$TOAST_TEXT")"
+
+echo "$TOAST_TEXT" | $CMD
