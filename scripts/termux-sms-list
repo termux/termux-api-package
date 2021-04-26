@@ -25,17 +25,17 @@ show_usage () {
     exit 0
 }
 
-while getopts :hdl:tf:cno: option
+while getopts :hdl:t:f:cno: option
 do
     case "$option" in
         h) show_usage;;
         d) PARAMS="$PARAMS --ez show-dates true";;
         l) PARAM_LIMIT=$OPTARG;;
+        t) PARAM_TYPE=$OPTARG;;
+        f) PARAM_NUMBER="--es from $OPTARG";;
+        c) PARAMS="$PARAMS --ez conversation-list true";;
         n) PARAMS="$PARAMS --ez show-phone-numbers true";;
         o) PARAM_OFFSET=$OPTARG;;
-        t) PARAM_TYPE=$OPTARG;;
-        c) PARAMS="$PARAMS --ez conversation-list true";;
-        f) PARAM_NUMBER="--es from $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
