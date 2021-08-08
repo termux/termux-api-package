@@ -3,7 +3,7 @@
 //        This executes
 //          am broadcast com.termux.api/.TermuxApiReceiver --es socket_input ${INPUT_SOCKET}
 //                                                        --es socket_output ${OUTPUT_SOCKET}
-//                                                        --es ${API_METHOD}
+//                                                        --es api_method ${API_METHOD}
 //                                                        ${ADDITIONAL_FLAGS}
 //        where ${INPUT_SOCKET} and ${OUTPUT_SOCKET} are addresses to linux abstract namespace sockets,
 //        used to pass on stdin to the java implementation and pass back output from java to stdout.
