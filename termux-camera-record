@@ -1,0 +1,62 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+set -eu
+CAMID=${1:-0} # camera 0 1 2 3 4 5 6 7 id
+FRAMECTOT=${2:-255} # video frame count total
+FRAMERATE=${3:-4} # video 2 4 8 16 32 frames per second rendered
+THRESHOLDSET=${4:-1024} # byte difference 64 128 256 512 1024 2048 4096 8192 16384 32768 65536 between last two picture frames taken
+_CAMS_ () {
+        FRAMECOUNT=0
+        while [ "$FRAMECOUNT" -le "$FRAMECTOT" ]
+        do
+                FRAMENAME="$(printf '%s.%04d.jpg' "${PWD##*/}$CAMID" "$FRAMECOUNT")"
+                printf '%s\n%s\n' "I $((FRAMECOUNT + 1))/$((FRAMECTOT + 1)) frame count; ${THRESHOLDSET:-} threshold" "I $CAMID camid taking picture $FRAMENAME"
+                sleep 0.0"$(shuf -i 101-420 -n 1)"
+                "$PREFIX"/libexec/termux-api CameraPhoto --es camera "$CAMID" --es file "$PWD/$FRAMENAME"
+                _ISZERO_
+        done
+}
+_CHECKMOTIONDIFF_() {
+        if [ "$FRAMECOUNT" -ne 0 ]
+        then
+                THRESHOLD="$((LASTZERO - ISZERO))"
+                THRESHOLD="${THRESHOLD//-}"
+                if [ "$THRESHOLD" -le "$THRESHOLDSET" ]
+                then
+                        printf '%s\n%s\n' "D $THRESHOLD threshold; deleting file $FRAMENAME" "I frame $FRAMENAME; Threshold set to $THRESHOLDSET"
+                        rm -f "$FRAMENAME"
+                else
+                        printf '%s\n' "S $THRESHOLD threshold; saving file $FRAMENAME"
+                        FRAMECOUNT="$((FRAMECOUNT + 1))"
+                fi
+        else
+                FRAMECOUNT="$((FRAMECOUNT + 1))"
+        fi
+}
+_ISZERO_ () {
+        if [ -n "${ISZERO:-}" ]
+        then
+                LASTZERO="$ISZERO"
+        fi
+        ISZERO="$(find . -type f -name "$FRAMENAME" -printf "%s\n" )"
+        if [ "$ISZERO" -eq 0 ]
+        then
+                if [ "$FRAMECOUNT" -eq 0 ]
+                then
+                        printf '%s\n' "E Could not begin shoot; Please check for issues and run '${0##*/}' again; Exiting..."
+                        rm -f "$FRAMENAME"
+                        exit 1
+                else
+                        printf '%s\n' "W deleting zero size file $FRAMENAME"
+                        rm -f "$FRAMENAME"
+                fi
+        else
+                _CHECKMOTIONDIFF_
+        fi
+}
+_CAMS_
+VIDEOPREFIX="${FRAMENAME%%.*}."
+TIMESTAMP="$(date +%Y%m%d%H%M)"
+printf '%s\n'  "Making $VIDEOPREFIX$TIMESTAMP.mp4; Please wait..."
+nice -n 20 ffmpeg -threads 1 -loglevel -8 -framerate "$FRAMERATE" -i "$VIDEOPREFIX"%04d.jpg -vcodec libx264 -acodec aac "$VIDEOPREFIX$TIMESTAMP".mp4 && printf '%s\n' "Finished making $VIDEOPREFIX$TIMESTAMP.mp4:"
+ls -al "$VIDEOPREFIX$TIMESTAMP".mp4
+## termux-camera-record EOF
