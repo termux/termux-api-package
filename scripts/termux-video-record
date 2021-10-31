@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-## Example usage: while : ; do bash /storage/0000-0000/Android/media/com.termux/cams/scripts/cams.bash ; done
 ## VLC APK can be downloaded directly at https://www.videolan.org/vlc/download-android.html and https://get.videolan.org/vlc-android/3.3.4/
 set -eu
 CAMID=${1:-0} # camera 0 1 2 3 4 5 6 7 id
