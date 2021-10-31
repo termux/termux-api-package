@@ -1,4 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/env bash
+# This script enables timelapse camera recording with motion detection in Termux.
 set -eu
 CAMID=${1:-0} # camera 0 1 2 3 4 5 6 7 id
 FRAMECTOT=${2:-255} # video frame count total
