@@ -9,7 +9,10 @@ show_usage () {
     echo "  -l           list available devices"
     echo "  -r           show permission request dialog if necessary"
     echo "  -e command   execute the specified command with a file descriptor"
-    echo "                 referring to the device as its argument"
+    echo "                 referring to the device as an argument (unless -E"
+    echo "                 argument is given)"
+    echo "  -E           transfer file descriptor as env var instead of as"
+    echo "                 command line argument"
     exit 0
 }
 
@@ -23,6 +26,7 @@ do
         l) ACTION="list"; ((MASK |= 1));;
         r) PARAMS="$PARAMS --ez request true"; ((MASK |= 2));;
         e) ACTION="open"; export TERMUX_CALLBACK="$OPTARG"; ((MASK |= 2));;
+        E) export TERMUX_EXPORT_FD=true;;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
