@@ -3,7 +3,7 @@ set -e -u
 
 SCRIPTNAME=termux-usb
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-l | [-r] [-E] [-e command] [device]"
+    echo "Usage: $SCRIPTNAME [-l | [-r] [-E] [-e command] [device | vendorId productId]]"
     echo "List or access USB devices. Devices cannot be accessed directly,"
     echo "                 only using $SCRIPTNAME."
     echo "  -l           list available devices"
@@ -35,9 +35,20 @@ if [ "$ACTION" == "list" ]
 then
     if [ $# -gt 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 else
-    if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
-    if [ $# -lt 1 ]; then echo "$SCRIPTNAME: missing -l or device path"; exit 1; fi
-    PARAMS="$PARAMS --es device $1"
+    if [ $# -lt 1 ]; then
+        echo "$SCRIPTNAME: missing -l or device path"
+        exit 1
+    elif [ $# -eq 1 ]; then
+        # The device's usbfs path has been provided
+        PARAMS="$PARAMS --es device $1"
+    elif [ $# -eq 2 ]; then
+        # A vendorId and ProductId of the device has been provided
+        PARAMS="$PARAMS --es vendorId $1"
+        PARAMS="$PARAMS --es productId $2"
+    else
+        echo "$SCRIPTNAME: too many arguments"
+        exit 1
+    fi
 fi
 
 CMD="@TERMUX_PREFIX@/libexec/termux-api Usb -a $ACTION $PARAMS"
