@@ -85,7 +85,7 @@ _Noreturn void exec_callback(int fd)
 
     char errmsg[256];
     char *export_to_env = getenv("TERMUX_EXPORT_FD");
-    if (strncmp(export_to_env, "true", 4) == 0) {
+    if (export_to_env && strncmp(export_to_env, "true", 4) == 0) {
         if (setenv("TERMUX_USB_FD", fds, true) == -1)
             perror("setenv");
         execl(callback_fun, callback_fun, NULL);
