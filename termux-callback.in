@@ -1,0 +1,3 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e -u
+$TERMUX_CALLBACK "$@"

@@ -63,6 +63,11 @@ foreach(file ${script_files})
   )
 endforeach()
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/termux-callback.in
+  termux-callback @ONLY
+)
+
 install(
   FILES ${CMAKE_BINARY_DIR}/termux-api
   DESTINATION ${CMAKE_INSTALL_PREFIX}/libexec
@@ -78,3 +83,11 @@ foreach(file ${script_files})
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
   )
 endforeach()
+
+install(
+  FILES ${CMAKE_BINARY_DIR}/termux-callback
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/libexec
+  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+)

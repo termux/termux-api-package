@@ -74,25 +74,19 @@ _Noreturn void exec_am_broadcast(int argc, char** argv,
 _Noreturn void exec_callback(int fd)
 {
     char *fds;
-    char *callback_fun = getenv("TERMUX_CALLBACK");
-    if (callback_fun == NULL) {
-        perror("TERMUX_CALLBACK is not set");
-        exit(1);
-    }
-
     if (asprintf(&fds, "%d", fd) == -1)
         perror("asprintf");
 
     char errmsg[256];
     char *export_to_env = getenv("TERMUX_EXPORT_FD");
-    if (export_to_env && strncmp(export_to_env, "true", 4) == 0) {
+    if (strncmp(export_to_env, "true", 4) == 0) {
         if (setenv("TERMUX_USB_FD", fds, true) == -1)
             perror("setenv");
-        execl(callback_fun, callback_fun, NULL);
-        sprintf(errmsg, "execl(\"%s\", %s)", callback_fun, fds);
+        execl(PREFIX "/libexec/termux-callback", "termux-callback", NULL);
+        sprintf(errmsg, "execl(\"" PREFIX "/libexec/termux-callback\")");
     } else {
-        execl(callback_fun, callback_fun, fds, NULL);
-        sprintf(errmsg, "execl(\"%s\")", callback_fun);
+        execl(PREFIX "/libexec/termux-callback", "termux-callback", fds, NULL);
+        sprintf(errmsg, "execl(\"" PREFIX "/libexec/termux-callback\", %s)", fds);
     }
     perror(errmsg);
     exit(1);
