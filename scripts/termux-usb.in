@@ -3,7 +3,7 @@ set -e -u
 
 SCRIPTNAME=termux-usb
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-l | [-r] [-e command] device]"
+    echo "Usage: $SCRIPTNAME [-l | [-r] [-E] [-e command] [device]"
     echo "List or access USB devices. Devices cannot be accessed directly,"
     echo "                 only using $SCRIPTNAME."
     echo "  -l           list available devices"
@@ -18,21 +18,18 @@ show_usage () {
 
 ACTION="permission"
 PARAMS=""
-MASK=0
-while getopts :hlre: option
+while getopts :hlre:E option
 do
     case "$option" in
         h) show_usage;;
-        l) ACTION="list"; ((MASK |= 1));;
-        r) PARAMS="$PARAMS --ez request true"; ((MASK |= 2));;
-        e) ACTION="open"; export TERMUX_CALLBACK="$OPTARG"; ((MASK |= 2));;
+        l) ACTION="list";;
+        r) PARAMS="$PARAMS --ez request true";;
+        e) ACTION="open"; export TERMUX_CALLBACK="$OPTARG";;
         E) export TERMUX_EXPORT_FD=true;;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
 shift $((OPTIND-1))
-
-if [ $MASK -eq 3 ]; then echo "$SCRIPTNAME: -l cannot be combined with other options"; exit 1; fi
 
 if [ "$ACTION" == "list" ]
 then
