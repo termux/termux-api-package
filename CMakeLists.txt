@@ -2,9 +2,12 @@ cmake_minimum_required(VERSION 3.0.0)
 project(termux-api)
 include(GNUInstallDirs)
 
-add_executable(termux-api termux-api.c)
-
 set(TERMUX_PREFIX ${CMAKE_INSTALL_PREFIX})
+
+add_library(termux-api SHARED termux-api.c)
+
+add_executable(termux-api-broadcast termux-api-broadcast.c)
+target_link_libraries(termux-api-broadcast termux-api)
 
 # TODO: get list through regex or similar
 set(script_files
@@ -69,11 +72,30 @@ configure_file(
 )
 
 install(
-  FILES ${CMAKE_BINARY_DIR}/termux-api
+  FILES ${CMAKE_BINARY_DIR}/termux-api-broadcast
   DESTINATION ${CMAKE_INSTALL_PREFIX}/libexec
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
+)
+
+# Create a symlink for termux-api-broadcast->termux-api for backwards
+# compatibility
+INSTALL(CODE "execute_process( \
+  COMMAND ${CMAKE_COMMAND} -E create_symlink \
+  termux-api-broadcast \
+  ${CMAKE_INSTALL_PREFIX}/libexec/termux-api \
+  )"
+)
+
+install(
+  FILES ${CMAKE_BINARY_DIR}/libtermux-api.so
+  TYPE LIB
+)
+
+install(
+  FILES ${CMAKE_CURRENT_SOURCE_DIR}/termux-api.h
+  TYPE INCLUDE
 )
 
 foreach(file ${script_files})
