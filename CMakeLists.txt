@@ -4,7 +4,16 @@ include(GNUInstallDirs)
 
 set(TERMUX_PREFIX ${CMAKE_INSTALL_PREFIX})
 
-add_library(termux-api SHARED termux-api.c)
+set(CMAKE_MODULE_PATH
+  ${CMAKE_SOURCE_DIR}/cmake
+  ${CMAKE_MODULE_PATH}
+)
+
+find_package(libusb REQUIRED)
+
+add_library(termux-api SHARED termux-api.c termux-usb.c)
+include_directories(termux-api ${LIBUSB_INCLUDE_DIRS})
+target_link_libraries(termux-api ${LIBUSB_LIBRARIES})
 
 add_executable(termux-api-broadcast termux-api-broadcast.c)
 target_link_libraries(termux-api-broadcast termux-api)
@@ -107,6 +116,7 @@ install(
 
 install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/termux-api.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/termux-usb.h
   TYPE INCLUDE
 )
 
