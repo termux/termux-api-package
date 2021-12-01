@@ -22,6 +22,194 @@
 # define PREFIX "/data/data/com.termux/files/usr"
 #endif
 
+#define LISTEN_SOCKET_ADDRESS "com.termux.api://listen"
+
+/* passes the arguments to the plugin via the unix socket, falling
+ * back to exec_am_broadcast() if that doesn't work
+ */
+_Noreturn void contact_plugin(int argc, char** argv,
+                                 char* input_address_string,
+                                 char* output_address_string)
+{
+    // Redirect stdout to /dev/null (but leave stderr open):
+    close(STDOUT_FILENO);
+    open("/dev/null", O_RDONLY);
+    // Close stdin:
+    close(STDIN_FILENO);
+
+    // ignore SIGPIPE, so am will be called when the connection is closed unexpectedly
+    struct sigaction sigpipe_action = {
+        .sa_handler = SIG_IGN,
+        .sa_flags = 0
+    };
+    sigaction(SIGPIPE, &sigpipe_action, NULL);
+
+    // try to connect over the listen socket first
+    int listenfd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0);
+    if (listenfd != -1) {
+        struct sockaddr_un listen_addr = { .sun_family = AF_UNIX };
+        memcpy(listen_addr.sun_path+1, LISTEN_SOCKET_ADDRESS, strlen(LISTEN_SOCKET_ADDRESS));
+        if (connect(listenfd, (struct sockaddr*) &listen_addr, sizeof(sa_family_t) + strlen(LISTEN_SOCKET_ADDRESS) + 1) == 0) {
+            socklen_t optlen = sizeof(struct ucred);
+            // check the uid to see if the socket is actually provided by the plugin
+            struct ucred cred;
+            if (getsockopt(listenfd, SOL_SOCKET, SO_PEERCRED, &cred, &optlen) == 0 && cred.uid == getuid()) {
+
+                const char insock_str[] = "--es socket_input \"";
+                const char outsock_str[] = "--es socket_output \"";
+                const char method_str[] = "--es api_method \"";
+
+                int len = sizeof(insock_str)-1+strlen(output_address_string)+2+sizeof(outsock_str)-1+strlen(input_address_string)+2+sizeof(method_str)-1+strlen(argv[1])+2;
+                for (int i = 2; i<argc; i++) {
+                    len += strlen(argv[i])+1;
+                    if (strcmp(argv[i], "--es") == 0 || strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--esa") == 0) {
+                        len += 2; // the string extra has to be enclosed in "
+                    }
+                    for (int a = 0; a<strlen(argv[i]); a++) {
+                        if (argv[i][a] == '"') {
+                            len += 1; // " has to be escaped, so one character more.
+                            // This assumes " is only present in string extra arguments, but that is probably an acceptable assumption to make
+                        }
+                    }
+                }
+
+                char* buffer = malloc(len);
+
+                int offset = 0;
+                memcpy(buffer+offset, insock_str, sizeof(insock_str)-1);
+                offset += sizeof(insock_str)-1;
+
+                memcpy(buffer+offset, output_address_string, strlen(output_address_string));
+                offset += strlen(output_address_string);
+
+                buffer[offset] = '"';
+                offset++;
+                buffer[offset] = ' ';
+                offset++;
+
+                memcpy(buffer+offset, outsock_str, sizeof(outsock_str)-1);
+                offset += sizeof(outsock_str)-1;
+
+                memcpy(buffer+offset, input_address_string, strlen(input_address_string));
+                offset += strlen(input_address_string);
+
+                buffer[offset] = '"';
+                offset++;
+                buffer[offset] = ' ';
+                offset++;
+
+                memcpy(buffer+offset, method_str, sizeof(method_str)-1);
+                offset += sizeof(method_str)-1;
+
+                memcpy(buffer+offset, argv[1], strlen(argv[1]));
+                offset += strlen(argv[1]);
+
+                buffer[offset] = '"';
+                offset++;
+                buffer[offset] = ' ';
+                offset++;
+
+                for (int i = 2; i<argc; i++) {
+                    if (strcmp(argv[i], "--es") == 0 || strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--esa") == 0) {
+                        memcpy(buffer+offset, argv[i], strlen(argv[i]));
+                        offset += strlen(argv[i]);
+                        buffer[offset] = ' ';
+                        offset++;
+                        i++;
+                        if (i < argc) {
+                            memcpy(buffer+offset, argv[i], strlen(argv[i]));
+                            offset += strlen(argv[i]);
+                            buffer[offset] = ' ';
+                            offset++;
+                        }
+                        i++;
+                        if (i < argc) {
+                            buffer[offset] = '"';
+                            offset++;
+                            for (int a = 0; a<strlen(argv[i]); a++) {
+                                if (argv[i][a] == '"') {
+                                    buffer[offset] = '\\';
+                                    offset++;
+                                    buffer[offset] = '"';
+                                    offset++;
+                                } else {
+                                    buffer[offset] = argv[i][a];
+                                    offset++;
+                                }
+                            }
+                            buffer[offset] = '"';
+                            offset++;
+                            buffer[offset] = ' ';
+                            offset++;
+                        }
+                    } else {
+                        memcpy(buffer+offset, argv[i], strlen(argv[i]));
+                        offset += strlen(argv[i]);
+                        buffer[offset] = ' ';
+                        offset++;
+                    }
+                }
+
+                int netlen = htons(len);
+
+                bool err = false;
+                // transmit the size
+                int totransmit = 2;
+                void* transmit = &netlen;
+                while (totransmit > 0) {
+                    int ret = send(listenfd, transmit, totransmit, 0);
+                    if (ret == -1) {
+                        err = true;
+                        break;
+                    }
+                    totransmit -= ret;
+                }
+
+                // transmit the argument list
+                if (! err) {
+                    totransmit = len;
+                    transmit = buffer;
+                    while (totransmit > 0) {
+                        int ret = send(listenfd, transmit, totransmit, 0);
+                        if (ret == -1) {
+                            err = true;
+                            break;
+                        }
+                        totransmit -= ret;
+                    }
+                }
+
+                if (! err) {
+                    char readbuffer[100];
+                    int ret;
+                    bool first = true;
+                    err = true;
+                    while ((ret = read(listenfd, readbuffer, 99)) > 0) {
+                        // if a single null byte is received as the first message, the call was successfull
+                        if (ret == 1 && readbuffer[0] == 0 && first) {
+                            err = false;
+                            break;
+                        }
+                        // otherwise it's an error message
+                        readbuffer[ret] = '\0';
+                        // printing out the error is good for debug purposes, but feel free to disable this
+                        fprintf(stderr, "%s", readbuffer);
+                        fflush(stderr);
+                        first = false;
+                    }
+                }
+
+                // if everything went well, there is no need to call am
+                if (! err) {
+                    exit(0);
+                }
+            }
+        }
+    }
+
+    exec_am_broadcast(argc, argv, input_address_string, output_address_string);
+}
+
 // Function which execs "am broadcast ..".
 _Noreturn void exec_am_broadcast(int argc, char** argv,
                                  char* input_address_string,
@@ -214,7 +402,7 @@ int run_api_command(int argc, char **argv) {
         perror("fork()");
         return -1;
     } else if (fork_result == 0)
-        exec_am_broadcast(argc, argv, input_addr_str, output_addr_str);
+        contact_plugin(argc, argv, input_addr_str, output_addr_str);
 
     struct sockaddr_un remote_addr;
     socklen_t addrlen = sizeof(remote_addr);

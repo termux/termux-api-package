@@ -1,0 +1,2 @@
+#!@TERMUX_PREFIX@/bin/sh
+am stopservice -n com.termux.api/.KeepAliveService

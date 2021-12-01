@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 _Noreturn void exec_am_broadcast(int, char**, char*, char*);
+_Noreturn void contact_plugin(int, char**, char*, char*);
 _Noreturn void exec_callback(int);
 void generate_uuid(char*);
 void* transmit_stdin_to_socket(void*);
