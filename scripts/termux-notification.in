@@ -17,6 +17,10 @@ show_usage () {
 	echo "  -c/--content content     content to show in the notification. Will take"
 	echo "                           precedence over stdin. If content is not passed as"
 	echo "                           an argument or with stdin, then there will be a 3s delay."
+	echo "  --channel channel-id     Specifies the notification channel id this notification should be send on."
+	echo "                           On Android versions lower than 8.0 this is a no-op."
+	echo "                           Create custom channels with termux-notification-channel."
+	echo "                           If the channel id is invalid, the notification will not be send."
 	echo "  --group group            notification group (notifications with the same"
 	echo "                           group are shown together)"
 	echo "  -h/--help                show this help"
@@ -88,6 +92,7 @@ OPT_BUTTON3_ACTION=""
 OPT_BUTTON3_TEXT=""
 OPT_CONTENT=""
 OPT_CONTENT_PASSED=""
+OPT_CHANNEL=""
 OPT_GROUP=""
 OPT_ID=""
 OPT_ICON=""
@@ -114,7 +119,7 @@ TEMP=`getopt \
 button1:,button1-action:,\
 button2:,button2-action:,\
 button3:,button3-action:,\
-content:,group:,help,help-actions,\
+content:,channel:,group:,help,help-actions,\
 id:,icon:,image-path:,\
 led-color:,led-on:,led-off:,\
 media-previous:,media-next:,media-play:,media-pause:,\
@@ -136,6 +141,7 @@ while true; do
 		--button3) OPT_BUTTON3_TEXT="$2"; shift 2;;
 		--button3-action) OPT_BUTTON3_ACTION="$2"; shift 2;;
 		-c | --content) OPT_CONTENT_PASSED=1; OPT_CONTENT="$2"; shift 2;;
+		--channel) OPT_CHANNEL="$2"; shift 2;;
 		--group) OPT_GROUP="$2"; shift 2;;
 		-h | --help) show_usage;;
 		--help-actions) show_help_actions; exit 0;;
@@ -177,6 +183,7 @@ if [ -n "$OPT_BUTTON2_ACTION" ]; then set -- "$@" --es button_action_2 "$OPT_BUT
 if [ -n "$OPT_BUTTON2_TEXT" ]; then set -- "$@" --es button_text_2 "$OPT_BUTTON2_TEXT"; fi
 if [ -n "$OPT_BUTTON3_ACTION" ]; then set -- "$@" --es button_action_3 "$OPT_BUTTON3_ACTION"; fi
 if [ -n "$OPT_BUTTON3_TEXT" ]; then set -- "$@" --es button_text_3 "$OPT_BUTTON3_TEXT"; fi
+if [ -n "$OPT_CHANNEL" ]; then set -- "$@" --es channel "$OPT_CHANNEL"; fi
 if [ -n "$OPT_GROUP" ]; then set -- "$@" --es group "$OPT_GROUP"; fi
 if [ -n "$OPT_ID" ]; then set -- "$@" --es id "$OPT_ID"; fi
 if [ -n "$OPT_ICON" ]; then set -- "$@" --es icon "$OPT_ICON"; fi

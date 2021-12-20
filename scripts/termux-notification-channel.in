@@ -1,0 +1,37 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-notification-channel
+show_usage () {
+    echo "Usage: $SCRIPTNAME -d channel-id"
+    echo "       $SCRIPTNAME channel-id channel-name"
+    echo "Create or delete a notification channel."
+    echo "Only usable on Android 8.0 and higher."
+    echo "Use -d to delete a channel."
+    echo "Creating a channel requires a channel id and a channel name."
+    echo "The name will be visible in the options, the id is used to send notifications on that specific channel."
+    echo "Creating a channel with the same id again will change the name."
+    echo "Creating a channel with the same id as a deleted channel will restore the user settings of the deleted channel."
+    echo "Use termux-notification --channel channel-id to send a notification on a custom channel."
+    exit 0
+}
+
+ARGS=""
+
+if [ "$1" = "-d" ]; then
+    shift
+    if [ $# == 1 ]; then
+      ARGS="--ez delete true --es id $1"
+    else
+      show_usage
+    fi
+else
+    if [ $# == 2 ]; then
+      ARGS="--es id $1 --es name $2"
+    else
+      show_usage
+    fi
+fi
+
+
+@TERMUX_PREFIX@/libexec/termux-api NotificationChannel $ARGS

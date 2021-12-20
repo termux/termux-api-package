@@ -35,6 +35,7 @@ set(script_files
   scripts/termux-microphone-record
   scripts/termux-nfc
   scripts/termux-notification
+  scripts/termux-notification-channel
   scripts/termux-notification-list
   scripts/termux-notification-remove
   scripts/termux-sensor
