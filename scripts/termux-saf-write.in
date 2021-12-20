@@ -1,0 +1,24 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-write
+show_usage () {
+    echo "Usage: $SCRIPTNAME uri"
+    echo "Writes the standard input into an existing file identified by a URI. The previous contents are erased. To create a new file, use termux-saf-create."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 1 ]; then echo "$SCRIPTNAME: Invalid argument count"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod writeDocument --es uri "$1"
+ 

@@ -1,0 +1,27 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-dirs
+show_usage () {
+    echo "Usage: $SCRIPTNAME"
+    echo "Lists all directories you gave Termux:API in the same format as termux-saf-ls."
+    echo "That meas this lists the 'directory' that contains all directories you can access with the other termux-saf-* commands."
+    echo "The URIs can be used with the other termux-saf-* commands to create files and folders and list the directory contents."
+    echo "See termux-saf-managedir to give Termux:API access to a folder."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod getManagedDocumentTrees
+ 

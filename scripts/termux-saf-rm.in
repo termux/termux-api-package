@@ -1,0 +1,25 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-rm
+show_usage () {
+    echo "Usage: $SCRIPTNAME uri"
+    echo "Removes the file or folder at the given URI. See other termux-saf-* commands for more info."
+    echo "Returns 0 on success, 1 if the file or folder couldn't be deleted and 2 if another error occurred."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 1 ]; then echo "$SCRIPTNAME: Invalid argument count"; exit 1; fi
+
+exit "$(@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod removeDocument --es uri "$1")"
+

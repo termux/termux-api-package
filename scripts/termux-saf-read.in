@@ -1,0 +1,26 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-read
+show_usage () {
+    echo "Usage: $SCRIPTNAME uri"
+    echo "Reads from a file identified by a URI and writes the data to sstandard output."
+    echo "You can use pipes to process the data or redirect it into a file to make a local copy."
+    echo "See termux-saf-list to get the URIs to files."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 1 ]; then echo "$SCRIPTNAME: Invalid argument count"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod readDocument --es uri "$1"
+ 

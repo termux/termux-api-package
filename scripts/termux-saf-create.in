@@ -1,0 +1,33 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-create
+show_usage () {
+    echo "Usage: $SCRIPTNAME [-t mime-type] folder-uri name"
+    echo "Creates a file in a folder managed by Termux:API."
+    echo "Returns the URI you can use to read and write the file with termux-saf-read and termux-saf-write."
+    echo "You can specify the mime type explicitly or let it be guessed based on the file extension."
+    echo "As the folder URI you can use the URI of a directory listed by termux-saf-dirs or by termux-saf-ls."
+    echo "Android doesn't allow creating files with the same name, so the name may be changed if a file or folder with that name already exists."
+    echo "You can use termux-saf-stat with the returned URI to get the name it was really given."
+    echo " -h  show this help"
+    echo " -t  specify the mime type of the file. The mime type is required for other apps to recognize the content as e.g. a video. If not specified, 'application/octet-stream' is assumed, that means raw binary data."
+    exit 0
+}
+
+mime=''
+
+while getopts :ht: option
+do
+    case "$option" in
+        h) show_usage;;
+        t) mime="$OPTARG";;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 2 ]; then echo "$SCRIPTNAME: Invalid argument count"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod createDocument --es treeuri "$1" --es filename "$2" --es mimetype "$mime"
+ 

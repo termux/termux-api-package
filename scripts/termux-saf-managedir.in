@@ -1,0 +1,28 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-managedir
+show_usage () {
+    echo "Usage: $SCRIPTNAME"
+    echo "Opens the system file explorer and lets you specify a folder Termux:API get access to."
+    echo "You can then use the termux-saf-* utilities to manage the contents in that folder."
+    echo "Returns a URI identifying the directory, this URI can be used with the other termux-saf-* commands to create files and folders and list the directory contents."
+    echo "If you close the file manager instead, an empty string will be returned."
+    echo "You can use termux-saf-dirs to list out all directories you gave Termux:API access to like this."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod manageDocumentTree
+ 

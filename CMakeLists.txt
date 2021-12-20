@@ -38,6 +38,15 @@ set(script_files
   scripts/termux-notification-channel
   scripts/termux-notification-list
   scripts/termux-notification-remove
+  scripts/termux-saf-create
+  scripts/termux-saf-dirs
+  scripts/termux-saf-ls
+  scripts/termux-saf-managedir
+  scripts/termux-saf-mkdir
+  scripts/termux-saf-read
+  scripts/termux-saf-rm
+  scripts/termux-saf-stat
+  scripts/termux-saf-write
   scripts/termux-sensor
   scripts/termux-share
   scripts/termux-sms-inbox

@@ -1,0 +1,25 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-mkdir
+show_usage () {
+    echo "Usage: $SCRIPTNAME parent-uri name"
+    echo "Creates a directory via SAF."
+    echo "This behaves like termux-saf-create, just for directories."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 2 ]; then echo "$SCRIPTNAME: Invalid argument count"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod createDocument --es treeuri "$1" --es filename "$2" --es mimetype 'vnd.android.document/directory'
+ 

@@ -1,0 +1,36 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-saf-ls
+show_usage () {
+    echo "Usage: $SCRIPTNAME folder-uri"
+    echo "Lists the files and folders in a folder identified by a URI."
+    echo "You can get a folder URI by:"
+    echo "- Listing folders with termux-saf-ls"
+    echo "- Giving Termux:API access to folders with termux-saf-managedir"
+    echo "- Listing the folders you gave Termux:API access to with termux-saf-dirs"
+    echo "- Creating a folder with termux-saf-mkdir"
+    echo "The list is returned as a JSON array with one JSON object per entry."
+    echo "The objects have the keys:"
+    echo "- 'name' for the human-readable name"
+    echo "- 'uri' for URI you can use with the other termux-saf-* commands"
+    echo "- 'type' for the mime type"
+    echo "- 'length' for size in bytes if it's a file"
+    echo "You can recognize folders by the special mime type 'vnd.android.document/directory'."
+    echo " -h  show this help"
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# != 1 ]; then echo "$SCRIPTNAME: Invalid argument count"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api SAF --es safmethod listDirectory --es treeuri "$1"
+ 
