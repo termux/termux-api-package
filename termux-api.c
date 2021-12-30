@@ -59,7 +59,10 @@ _Noreturn void contact_plugin(int argc, char** argv,
                 const char outsock_str[] = "--es socket_output \"";
                 const char method_str[] = "--es api_method \"";
 
-                int len = sizeof(insock_str)-1+strlen(output_address_string)+2+sizeof(outsock_str)-1+strlen(input_address_string)+2+sizeof(method_str)-1+strlen(argv[1])+2;
+                int len = 0;
+                len += sizeof(insock_str)-1 + strlen(output_address_string)+2;
+                len += sizeof(outsock_str)-1 + strlen(input_address_string)+2;
+                len += sizeof(method_str)-1 + strlen(argv[1])+2;
                 for (int i = 2; i<argc; i++) {
                     len += strlen(argv[i])+1;
                     if (strcmp(argv[i], "--es") == 0 || strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--esa") == 0) {
@@ -68,7 +71,10 @@ _Noreturn void contact_plugin(int argc, char** argv,
                     for (int a = 0; a<strlen(argv[i]); a++) {
                         if (argv[i][a] == '"') {
                             len += 1; // " has to be escaped, so one character more.
-                            // This assumes " is only present in string extra arguments, but that is probably an acceptable assumption to make
+                            /* This assumes " is only present in
+                            string extra arguments, but that is
+                            probably an acceptable assumption to
+                            make */
                         }
                     }
                 }
@@ -185,7 +191,7 @@ _Noreturn void contact_plugin(int argc, char** argv,
                     bool first = true;
                     err = true;
                     while ((ret = read(listenfd, readbuffer, 99)) > 0) {
-                        // if a single null byte is received as the first message, the call was successfull
+                        // if a single null byte is received as the first message, the call was successful
                         if (ret == 1 && readbuffer[0] == 0 && first) {
                             err = false;
                             break;
