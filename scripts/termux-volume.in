@@ -27,4 +27,4 @@ if [ $# -gt 0 ]; then
     ARGS="-a set-volume --es stream $1 --ei volume $2"
 fi
 
-@TERMUX_PREFIX@/libexec/termux-api Volume $ARGS
+@TERMUX_PREFIX@/libexec/termux-api-broadcast Volume $ARGS

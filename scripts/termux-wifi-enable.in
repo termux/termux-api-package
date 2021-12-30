@@ -18,4 +18,4 @@ case $1 in
         *) show_usage;;
 esac
 
-@TERMUX_PREFIX@/libexec/termux-api WifiEnable --ez enabled "$1"
+@TERMUX_PREFIX@/libexec/termux-api-broadcast WifiEnable --ez enabled "$1"

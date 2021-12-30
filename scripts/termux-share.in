@@ -48,7 +48,7 @@ if [ $# != 0 ]; then
     fi
 
     # Note that the file path can contain whitespace.
-    @TERMUX_PREFIX@/libexec/termux-api Share $PARAMS --es file "$(realpath "$1")"
+    @TERMUX_PREFIX@/libexec/termux-api-broadcast Share $PARAMS --es file "$(realpath "$1")"
 else
-    @TERMUX_PREFIX@/libexec/termux-api Share $PARAMS
+    @TERMUX_PREFIX@/libexec/termux-api-broadcast Share $PARAMS
 fi

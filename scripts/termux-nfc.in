@@ -44,4 +44,4 @@ if [ -n "$ARG_R" ]; then if [ -n "$ARG_W" ]; then echo "Error: Incompatible para
 if [ -n "$ARG_R" ]; then set -- "$@" $ARG_R $OPT_R;fi
 if [ -n "$ARG_W" ]; then set -- "$@" $ARG_W;fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T";fi
-@TERMUX_PREFIX@/libexec/termux-api Nfc "$@"
+@TERMUX_PREFIX@/libexec/termux-api-broadcast Nfc "$@"

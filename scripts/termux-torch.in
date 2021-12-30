@@ -25,4 +25,4 @@ else
 	show_usage
 fi
 
-@TERMUX_PREFIX@/libexec/termux-api Torch $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api-broadcast Torch $PARAMS

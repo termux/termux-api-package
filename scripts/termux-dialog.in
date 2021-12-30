@@ -277,4 +277,4 @@ if [ -n "$ARG_P" ]; then set -- "$@" $ARG_P "$OPT_P"; fi
 if [ -n "$ARG_N" ]; then set -- "$@" $ARG_N "$OPT_N"; fi
 if [ -n "$ARG_D" ]; then set -- "$@" $ARG_D "$OPT_D"; fi
 
-@TERMUX_PREFIX@/libexec/termux-api Dialog "$@"
+@TERMUX_PREFIX@/libexec/termux-api-broadcast Dialog "$@"

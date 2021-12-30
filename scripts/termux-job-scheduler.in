@@ -90,4 +90,4 @@ if [ -n "$OPT_PERSISTED" ]; then set -- "$@" --ez persisted "$OPT_PERSISTED"; fi
 if [ -n "$OPT_TRIGGER_CONTENT_URI" ]; then set -- "$@" --es trigger_content_uri "$OPT_TRIGGER_CONTENT_URI"; fi
 if [ -n "$OPT_TRIGGER_CONTENT_FLAG" ]; then set -- "$@" --ez trigger_content_flag "$OPT_TRIGGER_CONTENT_FLAG"; fi
 
-@TERMUX_PREFIX@/libexec/termux-api JobScheduler "$@"
+@TERMUX_PREFIX@/libexec/termux-api-broadcast JobScheduler "$@"

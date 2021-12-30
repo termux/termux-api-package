@@ -18,7 +18,7 @@ done
 shift $((OPTIND-1))
 
 if [ $# = 1 ]; then
-	@TERMUX_PREFIX@/libexec/termux-api TelephonyCall --es number "$1"
+	@TERMUX_PREFIX@/libexec/termux-api-broadcast TelephonyCall --es number "$1"
 else
 	echo "$SCRIPTNAME: No single number to call specified." >&2
 	exit 1

@@ -29,4 +29,4 @@ shift $((OPTIND-1))
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
 PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT"
-@TERMUX_PREFIX@/libexec/termux-api CallLog $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api-broadcast CallLog $PARAMS

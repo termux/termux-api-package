@@ -15,7 +15,7 @@ show_usage () {
 }
 
 main() {
-    @TERMUX_PREFIX@/libexec/termux-api MediaPlayer "$@"
+    @TERMUX_PREFIX@/libexec/termux-api-broadcast MediaPlayer "$@"
 }
 
 case "$1" in

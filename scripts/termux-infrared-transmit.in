@@ -25,4 +25,4 @@ if [ -z "$FREQUENCY" ]; then echo "$SCRIPTNAME: No frequency specified"; exit 1;
 if [ $# -lt 1 ]; then echo "$SCRIPTNAME: too few arguments"; exit 1; fi
 if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-@TERMUX_PREFIX@/libexec/termux-api InfraredTransmit $FREQUENCY --eia pattern $1
+@TERMUX_PREFIX@/libexec/termux-api-broadcast InfraredTransmit $FREQUENCY --eia pattern $1

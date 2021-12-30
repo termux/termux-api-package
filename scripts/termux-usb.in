@@ -51,7 +51,7 @@ else
     fi
 fi
 
-CMD="@TERMUX_PREFIX@/libexec/termux-api Usb -a $ACTION $PARAMS"
+CMD="@TERMUX_PREFIX@/libexec/termux-api-broadcast Usb -a $ACTION $PARAMS"
 
 if [ "$ACTION" == "permission" ]
 then

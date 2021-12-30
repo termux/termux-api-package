@@ -17,7 +17,7 @@ do
 done
 shift $((OPTIND-1))
 
-CMD="@TERMUX_PREFIX@/libexec/termux-api Clipboard -e api_version 2 --ez set true"
+CMD="@TERMUX_PREFIX@/libexec/termux-api-broadcast Clipboard -e api_version 2 --ez set true"
 if [ $# = 0 ]; then
 	$CMD
 else

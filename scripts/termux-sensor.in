@@ -69,7 +69,7 @@ get_limit () {
 }
 
 call_api () {
-	@TERMUX_PREFIX@/libexec/termux-api Sensor "$@"
+	@TERMUX_PREFIX@/libexec/termux-api-broadcast Sensor "$@"
 }
 
 set_flag () {

@@ -23,4 +23,4 @@ else
 ARGS="--ei brightness $1 --ez auto false"
 fi
 
-@TERMUX_PREFIX@/libexec/termux-api Brightness $ARGS
+@TERMUX_PREFIX@/libexec/termux-api-broadcast Brightness $ARGS

@@ -27,4 +27,4 @@ if [ $# != 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 touch "$1"
 PARAMS="$PARAMS --es file `realpath $1`"
 
-@TERMUX_PREFIX@/libexec/termux-api CameraPhoto $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api-broadcast CameraPhoto $PARAMS

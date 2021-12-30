@@ -53,4 +53,4 @@ case "$PARAM_TYPE" in
 esac
 
 PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT --ei type $PARAM_TYPE $PARAM_NUMBER"
-@TERMUX_PREFIX@/libexec/termux-api SmsInbox $PARAMS
+@TERMUX_PREFIX@/libexec/termux-api-broadcast SmsInbox $PARAMS

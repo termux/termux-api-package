@@ -212,4 +212,4 @@ fi
 # Trim trailing newlines
 OPT_CONTENT="$(echo "$OPT_CONTENT")"
 
-echo "$OPT_CONTENT" | @TERMUX_PREFIX@/libexec/termux-api Notification "$@"
+echo "$OPT_CONTENT" | @TERMUX_PREFIX@/libexec/termux-api-broadcast Notification "$@"

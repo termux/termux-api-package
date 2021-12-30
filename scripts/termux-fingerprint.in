@@ -36,4 +36,4 @@ if [ -n "$ARG_D" ]; then set -- "$@" $ARG_D "$OPT_D"; fi
 if [ -n "$ARG_S" ]; then set -- "$@" $ARG_S "$OPT_S"; fi
 if [ -n "$ARG_C" ]; then set -- "$@" $ARG_C "$OPT_C"; fi
 
-@TERMUX_PREFIX@/libexec/termux-api Fingerprint "$@"
+@TERMUX_PREFIX@/libexec/termux-api-broadcast Fingerprint "$@"
