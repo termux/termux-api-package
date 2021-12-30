@@ -318,7 +318,7 @@ void* transmit_stdin_to_socket(void* arg) {
 }
 
 // Main thread function which reads from input socket and writes to stdout.
-int transmit_socket_to_stdout(int input_socket_fd) {
+int transmit_socket_to_stdout(int input_socket_fd, api_command mode) {
     ssize_t len;
     char buffer[1024];
     char cbuf[256];
@@ -329,24 +329,43 @@ int transmit_socket_to_stdout(int input_socket_fd) {
     msg.msg_iovlen = 1;
     msg.msg_control = cbuf;
     msg.msg_controllen = sizeof(cbuf);
-    while ((len = recvmsg(input_socket_fd, &msg, 0)) > 0) {
-        struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg);
-        if (cmsg && cmsg->cmsg_len == CMSG_LEN(sizeof(int))) {
-            if (cmsg->cmsg_type == SCM_RIGHTS) {
-                fd = *((int *) CMSG_DATA(cmsg));
-            }
+
+    if (mode == TERMUX_API_PRINT_STDOUT) {
+        while ((len = recvmsg(input_socket_fd, &msg, 0)) > 0) {
+            write(STDOUT_FILENO, buffer, len);
+            msg.msg_controllen = sizeof(cbuf);
         }
-        // A file descriptor must be accompanied by a non-empty message,
-        // so we use "@" when we don't want any output.
-        if (fd != -1 && len == 1 && buffer[0] == '@') { len = 0; }
-        write(STDOUT_FILENO, buffer, len);
-        msg.msg_controllen = sizeof(cbuf);
+        if (len < 0) {
+            perror("recvmsg()");
+            return -1;
+        }
+        return 0;
+    } else if (mode == TERMUX_USB_GET_FD) {
+        int fd = -1;
+        while ((len = recvmsg(input_socket_fd, &msg, 0)) > 0) {
+            struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg);
+            if (cmsg && cmsg->cmsg_len == CMSG_LEN(sizeof(int))) {
+                if (cmsg->cmsg_type == SCM_RIGHTS) {
+                    fd = *((int *) CMSG_DATA(cmsg));
+                }
+            }
+            // A file descriptor must be accompanied by a non-empty message,
+            // so we use "@" when we don't want any output.
+            if (fd > 0 && len == 1 && buffer[0] == '@') { len = 0; }
+            msg.msg_controllen = sizeof(cbuf);
+        }
+        if (len < 0) {
+            perror("recvmsg()");
+            return -1;
+        }
+        return fd;
+    } else {
+        fprintf(stderr, "Error: unknown command mode %d\n", mode);
+        return -1;
     }
-    if (len < 0) perror("recvmsg()");
-    return fd;
 }
 
-int run_api_command(int argc, char **argv) {
+int run_api_command(int argc, char **argv, api_command mode) {
     // Do not transform children into zombies when they terminate:
     struct sigaction sigchld_action = {
         .sa_handler = SIG_DFL,
@@ -421,7 +440,7 @@ int run_api_command(int argc, char **argv) {
                    &output_server_socket);
 
     /* Device has been opened, time to actually get the fd */
-    int fd = transmit_socket_to_stdout(input_client_socket);
+    int fd = transmit_socket_to_stdout(input_client_socket, mode);
     close(input_client_socket);
     return fd;
 }
