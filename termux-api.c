@@ -318,13 +318,13 @@ void* transmit_stdin_to_socket(void* arg) {
 }
 
 // Main thread function which reads from input socket and writes to stdout.
-int transmit_socket_to_stdout(int input_socket_fd, api_command mode) {
+int transmit_socket_to_stdout(int input_socket_fd, api_command mode,
+                              char *buffer, int buf_len) {
     ssize_t len;
-    char buffer[1024];
     char cbuf[256];
-    struct iovec io = { .iov_base = buffer, .iov_len = sizeof(buffer) };
+    struct iovec io = { .iov_base = buffer, .iov_len = buf_len };
     struct msghdr msg = { 0 };
-    int fd = -1;  // An optional file descriptor received through the socket
+
     msg.msg_iov = &io;
     msg.msg_iovlen = 1;
     msg.msg_control = cbuf;
@@ -365,7 +365,8 @@ int transmit_socket_to_stdout(int input_socket_fd, api_command mode) {
     }
 }
 
-int run_api_command(int argc, char **argv, api_command mode) {
+int run_api_command(int argc, char **argv, api_command mode, char *buf,
+                    int buf_len) {
     // Do not transform children into zombies when they terminate:
     struct sigaction sigchld_action = {
         .sa_handler = SIG_DFL,
@@ -440,7 +441,8 @@ int run_api_command(int argc, char **argv, api_command mode) {
                    &output_server_socket);
 
     /* Device has been opened, time to actually get the fd */
-    int fd = transmit_socket_to_stdout(input_client_socket, mode);
+    int fd = transmit_socket_to_stdout(input_client_socket, mode, buf,
+                                       buf_len);
     close(input_client_socket);
     return fd;
 }

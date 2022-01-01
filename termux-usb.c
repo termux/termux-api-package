@@ -44,10 +44,12 @@ intptr_t termux_usb_get_fd_from_usbfs(char *usbfs_addr)
         usbfs_addr,
     };
     int argc = sizeof(argv)/sizeof(argv[0]) - 1;
+    int buf_len = 1024;
+    char buf[buf_len];
 
     api_command mode = TERMUX_USB_GET_FD;
 
-    int fd = run_api_command(argc, argv, mode);
+    int fd = run_api_command(argc, argv, mode, buf, buf_len);
 
     return (intptr_t) fd;
 };
@@ -81,10 +83,13 @@ intptr_t termux_usb_get_fd_from_ids(char *vendor_id, char *product_id)
         "productId",
         product_id,
     };
+
     int argc = sizeof(argv)/sizeof(argv[0]) - 1;
     api_command mode = TERMUX_USB_GET_FD;
+    int buf_len = 1024;
+    char buf[buf_len];
 
-    int fd = run_api_command(argc, argv, mode);
+    int fd = run_api_command(argc, argv, mode, buf, buf_len);
 
     return (intptr_t) fd;
 };

@@ -18,8 +18,8 @@ _Noreturn void contact_plugin(int, char**, char*, char*);
 _Noreturn void exec_callback(int);
 void generate_uuid(char*);
 void* transmit_stdin_to_socket(void*);
-int transmit_socket_to_stdout(int, api_command);
-int run_api_command(int, char**, api_command);
+int transmit_socket_to_stdout(int, api_command, char *, int);
+int run_api_command(int, char**, api_command, char *, int);
 
 #if defined(__cplusplus)
 }

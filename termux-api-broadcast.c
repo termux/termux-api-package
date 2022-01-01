@@ -17,7 +17,9 @@ int main(int argc, char** argv) {
     api_command mode = TERMUX_API_PRINT_STDOUT;
 
     /* Run the api command */
-    int fd = run_api_command(argc, argv, mode);
+    int buf_len = 1024;
+    char buf[buf_len];
+    int fd = run_api_command(argc, argv, mode, buf, buf_len);
 
     if (fd != -1) { exec_callback(fd); }
 
