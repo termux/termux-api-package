@@ -245,7 +245,7 @@ _Noreturn void exec_am_broadcast(int argc, char** argv,
     memcpy(child_argv + extra_args, argv + 2, (argc-1) * sizeof(char*));
 
     // End with NULL:
-    child_argv[argc + extra_args] = NULL;
+    child_argv[argc + extra_args - 1] = NULL;
 
     // Use an a executable taking care of PATH and LD_LIBRARY_PATH:
     execv(PREFIX "/bin/am", child_argv);
