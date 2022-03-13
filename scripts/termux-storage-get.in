@@ -3,13 +3,13 @@ set -e -u
 
 SCRIPTNAME=termux-storage-get
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-a] [-m] [-l] [-p] [-t mimeType] [output-file]"
+    echo "Usage: $SCRIPTNAME [-w] [-m] [-l] [-p] [-t mimeType] [output-file]"
     echo "    Request a file from the system (and output it to the specified file)."
     echo ""
-    echo "Usage: $SCRIPTNAME -a -f [-l] [-p]"
+    echo "Usage: $SCRIPTNAME -w -f [-l] [-p]"
     echo "    Request a folder and print URI"
     echo ""
-    echo "  -a            asyncronous call (wait until finish) and print URI result"
+    echo "  -w            wait/block until finish (synchronous call) and print URI result"
     echo "  -m            allow to select multiple files"
     echo "  -l            print line(s) of URI instead of json"
     echo "  -t mimeType   MIME type of file to open"
@@ -19,18 +19,18 @@ show_usage () {
     exit 0
 }
 
-async=false
+wait=false
 multiple=false
 json=true
 mimeType='*/*'
 folder=false
 persist=false
 
-while getopts :hamlt:fp option
+while getopts :hwmlt:fp option
 do
     case "$option" in
         h) show_usage;;
-        a) async=true;;
+        w) wait=true;;
         m) multiple=true;;
         l) json=false;;
         t) mimeType="$OPTARG";;
@@ -46,4 +46,4 @@ if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 if [ "$folder" = "true" ] && [ $# -eq 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 if [ $# -eq 1 ]; then filename="$(realpath "$1")"; fi
 
-@TERMUX_PREFIX@/libexec/termux-api StorageGet --es file "$filename" --ez async "$async" --ez multiple "$multiple" --ez json "$json" --es type "$mimeType" --ez folder "$folder" --ez persist "$persist"
+@TERMUX_PREFIX@/libexec/termux-api StorageGet --es file "$filename" --ez wait "$wait" --ez multiple "$multiple" --ez json "$json" --es type "$mimeType" --ez folder "$folder" --ez persist "$persist"
