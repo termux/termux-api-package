@@ -7,10 +7,10 @@ show_usage () {
 	echo "Change wallpaper on your device"
 	echo
 	echo "Usage: $SCRIPTNAME [options]"
-	echo "-h         show this help"
-	echo "-f <file>  set wallpaper from file"
-	echo "-u <url>   set wallpaper from url resource"
-	echo "-l         set wallpaper for lockscreen (Nougat and later)"
+	echo "-h              show this help"
+	echo "-f <file>       set wallpaper from file"
+	echo "-u <url>        set wallpaper from url resource"
+	echo "-l [lock|home]  set for lockscreen or homescreen only (Nougat and later)"
 	exit 1
 }
 
@@ -22,7 +22,26 @@ while getopts :h,:l,f:,u: option
 do
 	case "$option" in
 		h) show_usage ;;
-		l) OPT_LS="true" ;;
+		l) #see https://stackoverflow.com/a/38697692
+			lock=${!OPTIND}
+			case "$lock" in
+				-*|"")
+					OPT_LS=true
+					;;
+				lock)
+					OPTIND=$((OPTIND + 1))
+					OPT_LS=true
+					;;
+				home)
+					OPTIND=$((OPTIND + 1))
+					OPT_LS=false
+					;;
+				*)
+					echo "$SCRIPTNAME: -l argument must be lock or home (if given)"
+					exit 1
+					;;
+			esac
+			;;
 		f) path="$(realpath "$OPTARG")"
 			if [[ ! -f "$path" ]]; then
 				echo "$SCRIPTNAME: $path is not a file!"
