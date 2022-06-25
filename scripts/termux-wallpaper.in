@@ -7,18 +7,27 @@ show_usage () {
 	echo "Change wallpaper on your device"
 	echo
 	echo "Usage: $SCRIPTNAME [options]"
-	echo "-h              show this help"
-	echo "-f <file>       set wallpaper from file"
-	echo "-u <url>        set wallpaper from url resource"
-	echo "-l [lock|home]  set for lockscreen or homescreen only (Nougat and later)"
+	echo "-h         show this help"
+	echo "-f <file>  set wallpaper from file"
+	echo "-u <url>   set wallpaper from url resource"
+	echo "-l [lock|home]"
+	echo "           set for lockscreen or homescreen only (Nougat and later)"
+	echo "-c W{x:}H[+X+Y][%]"
+	echo "           center visible area around rectangle of width W and height H,"
+	echo "           X pixels from the top and Y pixels from the left or"
+	echo "           centered if no offset is given,"
+	echo "           : (instead of x) makes the size an aspect ratio,"
+	echo "           % makes size relative to original image size and"
+	echo "           offsets relative to remaining space"
 	exit 1
 }
 
 OPT_LS=""
+OPT_CROP=""
 OPT_FILE=""
 OPT_URL=""
 
-while getopts :h,:l,f:,u: option
+while getopts :h,:l,f:,u:,c: option
 do
 	case "$option" in
 		h) show_usage ;;
@@ -49,6 +58,7 @@ do
 			fi
 			OPT_FILE="$path" ;;
 		u) OPT_URL="$OPTARG" ;;
+		c) OPT_CROP="$OPTARG" ;;
 		?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1 ;;
 	esac
 done
@@ -68,4 +78,5 @@ set --
 [ -n "$OPT_LS" ]   && set -- "$@" --ez lockscreen "$OPT_LS"
 [ -n "$OPT_FILE" ] && set -- "$@" --es file "$OPT_FILE"
 [ -n "$OPT_URL" ]  && set -- "$@" --es url "$OPT_URL"
+[ -n "$OPT_CROP" ] && set -- "$@" --es crop "$OPT_CROP"
 @TERMUX_PREFIX@/libexec/termux-api Wallpaper "$@"
