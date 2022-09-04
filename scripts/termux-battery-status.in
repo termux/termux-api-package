@@ -22,4 +22,4 @@ shift $((OPTIND-1))
 
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-timeout "$TIMEOUT" @TERMUX_PREFIX@/libexec/termux-api BatteryStatus
+timeout --preserve-status "$TIMEOUT" @TERMUX_PREFIX@/libexec/termux-api BatteryStatus
