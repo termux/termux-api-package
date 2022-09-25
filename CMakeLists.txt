@@ -60,6 +60,7 @@ set(script_files
   scripts/termux-toast
   scripts/termux-torch
   scripts/termux-tts-engines
+  scripts/termux-tts-voices
   scripts/termux-tts-speak
   scripts/termux-usb
   scripts/termux-vibrate
