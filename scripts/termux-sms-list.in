@@ -13,7 +13,7 @@ SUPPORTED_TYPES="all|inbox|sent|draft|outbox"
 show_usage () {
     echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type] [-c] [-f number]"
     echo "List SMS messages."
-    echo "  -l limit   offset in sms list (default: $PARAM_LIMIT)"
+    echo "  -l limit   limit in retrieved sms list (default: $PARAM_LIMIT)"
     echo "  -o offset  offset in sms list (default: $PARAM_OFFSET)"
     echo "  -t type    the type of messages to list (default: $PARAM_TYPE):"
     echo "             $SUPPORTED_TYPES"
