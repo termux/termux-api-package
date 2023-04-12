@@ -21,6 +21,6 @@ CMD="@TERMUX_PREFIX@/libexec/termux-api Clipboard -e api_version 2 --ez set true
 if [ $# = 0 ]; then
 	$CMD
 else
-	echo -n "$@" | $CMD
+	printf "%s" "$@" | $CMD
 fi
 
