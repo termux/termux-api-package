@@ -5,9 +5,11 @@ include(GNUInstallDirs)
 set(TERMUX_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 add_library(termux-api SHARED termux-api.c)
+add_library(termux-api-static STATIC termux-api.c)
+set_target_properties(termux-api-static PROPERTIES OUTPUT_NAME termux-api)
 
 add_executable(termux-api-broadcast termux-api-broadcast.c)
-target_link_libraries(termux-api-broadcast termux-api)
+target_link_libraries(termux-api-broadcast termux-api-static)
 
 # TODO: get list through regex or similar
 set(script_files
@@ -101,7 +103,9 @@ INSTALL(CODE "execute_process( \
 )
 
 install(
-  FILES ${CMAKE_BINARY_DIR}/libtermux-api.so
+  FILES
+    ${CMAKE_BINARY_DIR}/libtermux-api.so
+    ${CMAKE_BINARY_DIR}/libtermux-api.a
   TYPE LIB
 )
 
