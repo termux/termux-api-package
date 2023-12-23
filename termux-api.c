@@ -16,6 +16,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __ANDROID__
+#include <android/api-level.h>
+#endif
+
 #include "termux-api.h"
 
 #ifndef PREFIX
@@ -44,8 +48,21 @@ _Noreturn void contact_plugin(int argc, char** argv,
     };
     sigaction(SIGPIPE, &sigpipe_action, NULL);
 
-    // try to connect over the listen socket first
-    int listenfd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0);
+    // Try to connect over the listen socket first if running on Android `< 14`.
+    // On Android `>= 14`, if termux-api app process was started previously
+    // and it started the socket server, but later Android froze the
+    // process, the socket will still be connectable, but no response
+    // will be received until the app process is unfrozen agin and
+    // `read()` call below will hang indefinitely until that happens,
+    // so use legacy `am broadcast` command, which will also unfreeze
+    // the app process to deliver the intent.
+    // - https://github.com/termux/termux-api/issues/638#issuecomment-1813233924
+    int listenfd = -1;
+    #ifdef __ANDROID__
+        if (android_get_device_api_level() < 34) {
+            listenfd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0);
+        }
+    #endif
     if (listenfd != -1) {
         struct sockaddr_un listen_addr = { .sun_family = AF_UNIX };
         memcpy(listen_addr.sun_path+1, LISTEN_SOCKET_ADDRESS, strlen(LISTEN_SOCKET_ADDRESS));
