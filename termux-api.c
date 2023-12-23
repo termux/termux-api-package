@@ -22,6 +22,8 @@
 
 #include "termux-api.h"
 
+#define TERMUX_API_PACKAGE_VERSION "0.57"
+
 #ifndef PREFIX
 # define PREFIX "/data/data/com.termux/files/usr"
 #endif
@@ -364,6 +366,13 @@ int transmit_socket_to_stdout(int input_socket_fd) {
 }
 
 int run_api_command(int argc, char **argv) {
+    // If only `--version` argument is passed
+    if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+        fprintf(stdout, "%s\n", TERMUX_API_PACKAGE_VERSION);
+        fflush(stdout);
+        exit(0);
+    }
+
     // Do not transform children into zombies when they terminate:
     struct sigaction sigchld_action = {
         .sa_handler = SIG_DFL,
