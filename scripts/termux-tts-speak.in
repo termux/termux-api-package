@@ -3,7 +3,7 @@ set -e -u
 
 SCRIPTNAME=termux-tts-speak
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-e engine] [-l language] [-n region] [-v variant] [-p pitch] [-r rate] [-s stream] [text-to-speak]"
+    echo "Usage: $SCRIPTNAME [-e engine] [-l language] [-n region] [-v variant] [-p pitch] [-r rate] [-s stream] [-f <file>] [text-to-speak]"
     echo "Speak text with a system text-to-speech (TTS) engine. The text to speak is either supplied as arguments or read from stdin if no arguments are given."
     echo "  -e engine    TTS engine to use (see termux-tts-engines)"
     echo "  -l language  language to speak in (may be unsupported by the engine)"
@@ -19,12 +19,15 @@ show_usage () {
     echo "                 (2.0 is twice the normal speech rate)."
     echo "  -s stream    audio stream to use (default:NOTIFICATION), one of:"
     echo "                 ALARM, MUSIC, NOTIFICATION, RING, SYSTEM, VOICE_CALL"
+    echo "  -f <file>    synthesize speech to wav file,"
+    echo "                 only first line of text is synthesized (API limit),"
+    echo "                 overrides stream option"
     exit 0
 }
 
 PARAMS=""
 
-while getopts :he:l:n:v:p:r:s: option
+while getopts :he:l:n:v:p:r:s:f: option
 do
     case "$option" in
         h) show_usage;;
@@ -35,6 +38,15 @@ do
         p) PARAMS="$PARAMS --ef pitch $OPTARG";;
         r) PARAMS="$PARAMS --ef rate $OPTARG";;
         s) PARAMS="$PARAMS --es stream $OPTARG";;
+        f)
+            if pathchk -pP "$OPTARG" 2> /dev/null; then
+                FILE=$(realpath "$OPTARG")
+                PARAMS="$PARAMS --es file $FILE"  # still unsafe
+            else
+                echo "$SCRIPTNAME: non-portable filename";
+                exit 1
+            fi
+            ;;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
