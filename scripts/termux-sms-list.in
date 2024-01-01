@@ -11,7 +11,7 @@ SCRIPTNAME=termux-sms-list
 
 SUPPORTED_TYPES="all|inbox|sent|draft|outbox"
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type] [-c] [-f number]"
+    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type] [-c] [-f number] [-a]"
     echo "List SMS messages."
     echo "  -l limit   limit in retrieved sms list (default: $PARAM_LIMIT)"
     echo "  -o offset  offset in sms list (default: $PARAM_OFFSET)"
@@ -19,13 +19,14 @@ show_usage () {
     echo "             $SUPPORTED_TYPES"
     echo "  -c         conversation list (unique item per conversation)"
     echo "  -f number  the number for locate messages"
+    echo "  -a         sorts by date in asc order"
 
     echo "  -n         (obsolete) show phone numbers"
     echo "  -d         (obsolete) show dates when messages were created"
     exit 0
 }
 
-while getopts :hdl:t:f:cno: option
+while getopts :hdl:t:f:cnoa: option
 do
     case "$option" in
         h) show_usage;;
@@ -36,6 +37,7 @@ do
         c) PARAMS="$PARAMS --ez conversation-list true";;
         n) PARAMS="$PARAMS --ez show-phone-numbers true";;
         o) PARAM_OFFSET=$OPTARG;;
+        a) PARAMS="$PARAMS --ez date-asc true";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
