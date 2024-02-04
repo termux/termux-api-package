@@ -1,0 +1,113 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e -u -f
+
+SCRIPTNAME=termux-cron
+
+show_usage () {
+	echo "Usage: $SCRIPTNAME [options]"
+	echo "Cron-like job scheduler."
+	echo "  -l/--list                  list cron jobs and exit"
+	echo "  -i/--info id               print details about job"
+	echo "  -r/--reschedule            reschedule all alarms"
+	echo "  --delete-all               delete all cron jobs and exit"
+	echo "  --delete id                delete cron job by id and exit"
+	echo "Options for adding a job:"
+	echo "  -c/--cron expression       cron expression when the job will run"
+	echo "  -s/--script path           path to the script to be called"
+	echo "  --exact boolean            schedule exact (false - needs permission)"
+	echo "  --network text             run only when this type of network available (NOT_REQUIRED)
+	                                   possible values: NOT_REQUIRED|CONNECTED|UNMETERED|NOT_ROAMING|METERED"
+	echo "  --battery-not-low boolean  run only when battery is not low (false)"
+	echo "  --charging boolean         run only when charging (false)"
+	echo "  --idle boolean             run only when idle (false)"
+	echo "  --storage-not-low boolean  run only when storage is not low (false)"
+	echo "  --timeout int              timeout in seconds for constraints to be fullfilled (0=disabled) (60)"
+	echo "  --grace-period int         grace period in milliseconds between SIGTERM and SIGKILL if job is terminated (5000)"
+	echo "  --continue boolean         continue job execution if constraints fail (false)"
+	echo "  --max-runtime int          maximal runtime in seconds for job to finish (0=disabled) (3600)"
+	exit 0
+}
+
+OPT_LIST=""
+OPT_INFO=""
+OPT_RESCHEDULE=""
+OPT_DELETE=""
+OPT_DELETE_ALL=""
+
+OPT_CRON=""
+OPT_SCRIPT=""
+
+OPT_EXACT=""
+OPT_NETWORK=""
+OPT_BATTERY_NOT_LOW=""
+OPT_CHARGING=""
+OPT_IDLE=""
+OPT_STORAGE_NOT_LOW=""
+OPT_TIMEOUT=""
+OPT_GRACE_PERIOD=""
+OPT_CONTINUE=""
+OPT_RUNTIME=""
+
+TEMP=`getopt \
+     -n $SCRIPTNAME \
+     -o hlri:c:s: \
+     --long \
+info:,delete-all,delete:,\
+reschedule,cron:,script:,\
+exact:,network:,\
+battery-not-low:,charging:,\
+idle:,storage-not-low:,\
+timeout:,grace-period:,\
+continue:,max-runtime: \
+     -s bash \
+     -- "$@"`
+eval set -- "$TEMP"
+
+while true; do
+	case "$1" in
+		-l | --list) OPT_LIST=1; shift;;
+		-i | --info) OPT_INFO="$2"; shift 2;;
+		-r | --reschedule) OPT_RESCHEDULE=1; shift;;
+		--delete-all) OPT_DELETE_ALL=1; shift;;
+		--delete) OPT_DELETE="$2"; shift 2;;
+		-c | --cron) OPT_CRON="$2"; shift 2;;
+		-s | --script) OPT_SCRIPT="$2"; shift 2;;
+		--exact) OPT_EXACT="$2"; shift 2;;
+		--network) OPT_NETWORK="$2"; shift 2;;
+		--battery-not-low) OPT_BATTERY_NOT_LOW="$2"; shift 2;;
+		--charging) OPT_CHARGING="$2"; shift 2;;
+		--idle) OPT_IDLE="$2"; shift 2;;
+		--storage-not-low) OPT_STORAGE_NOT_LOW="$2"; shift 2;;
+		--timeout) OPT_TIMEOUT="$2"; shift 2;;
+		--grace-period) OPT_GRACE_PERIOD="$2"; shift 2;;
+		--continue) OPT_CONTINUE="$2"; shift 2;;
+		--max-runtime) OPT_RUNTIME="$2"; shift 2;;
+		-h | --help) show_usage;;
+		--) shift; break ;;
+	esac
+done
+
+if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+
+set --
+if [ -n "$OPT_LIST" ]; then set -- "$@" --ez list "$OPT_LIST"; fi
+if [ -n "$OPT_INFO" ]; then set -- "$@" --ei info "$OPT_INFO"; fi
+if [ -n "$OPT_RESCHEDULE" ]; then set -- "$@" --ez reschedule "$OPT_RESCHEDULE"; fi
+
+if [ -n "$OPT_DELETE_ALL" ]; then set -- "$@" --ez delete_all "$OPT_DELETE_ALL"; fi
+if [ -n "$OPT_DELETE" ]; then set -- "$@" --ei delete "$OPT_DELETE"; fi
+
+if [ -n "$OPT_CRON" ]; then set -- "$@" --es cron "$OPT_CRON"; fi
+if [ -n "$OPT_SCRIPT" ]; then set -- "$@" --es script "$OPT_SCRIPT" --es path "$(pwd)"; fi
+if [ -n "$OPT_EXACT" ]; then set -- "$@" --ez exact "$OPT_EXACT"; fi
+if [ -n "$OPT_NETWORK" ]; then set -- "$@" --es network "$OPT_NETWORK"; fi
+if [ -n "$OPT_BATTERY_NOT_LOW" ]; then set -- "$@" --ez battery_not_low "$OPT_BATTERY_NOT_LOW"; fi
+if [ -n "$OPT_CHARGING" ]; then set -- "$@" --ez charging "$OPT_CHARGING"; fi
+if [ -n "$OPT_IDLE" ]; then set -- "$@" --ez idle "$OPT_IDLE"; fi
+if [ -n "$OPT_STORAGE_NOT_LOW" ]; then set -- "$@" --ez storage_not_low "$OPT_STORAGE_NOT_LOW"; fi
+if [ -n "$OPT_TIMEOUT" ]; then set -- "$@" --ei constraint_timeout "$OPT_TIMEOUT"; fi
+if [ -n "$OPT_GRACE_PERIOD" ]; then set -- "$@" --ei grace_period "$OPT_GRACE_PERIOD"; fi
+if [ -n "$OPT_CONTINUE" ]; then set -- "$@" --ez constraint_continue "$OPT_CONTINUE"; fi
+if [ -n "$OPT_RUNTIME" ]; then set -- "$@" --ei max_runtime "$OPT_RUNTIME"; fi
+
+@TERMUX_PREFIX@/libexec/termux-api Cron "$@"
