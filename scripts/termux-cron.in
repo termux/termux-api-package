@@ -21,7 +21,7 @@ show_usage () {
 	echo "  --charging boolean         run only when charging (false)"
 	echo "  --idle boolean             run only when idle (false)"
 	echo "  --storage-not-low boolean  run only when storage is not low (false)"
-	echo "  --timeout int              timeout in seconds for constraints to be fullfilled (0=disabled) (60)"
+	echo "  --timeout int              timeout in seconds for constraints to be fullfilled (0=disabled) (300)"
 	echo "  --grace-period int         grace period in milliseconds between SIGTERM and SIGKILL if job is terminated (5000)"
 	echo "  --continue boolean         continue job execution if constraints fail (false)"
 	echo "  --max-runtime int          maximal runtime in seconds for job to finish (0=disabled) (3600)"
