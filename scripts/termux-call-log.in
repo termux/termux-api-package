@@ -1,30 +1,44 @@
 #!@TERMUX_PREFIX@/bin/bash
 set -u
 
-PARAM_LIMIT=10
-PARAM_OFFSET=0
+PARAM_LIMIT_DEFAULT=10
+PARAM_LIMIT="$PARAM_LIMIT_DEFAULT"
+
+PARAM_OFFSET_DEFAULT=0
+PARAM_OFFSET="$PARAM_OFFSET_DEFAULT"
+
 PARAMS=""
 
 SCRIPTNAME=termux-call-log
 
+validate_is_postive_number() {
+    if [[ ! "${2:-}" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: The -$1 value '${2:-}' is not a positive number." 1>&2
+        show_usage || return $?
+        exit 1
+    fi
+}
+
 show_usage () {
-    echo "Usage: $SCRIPTNAME [-l limit] [-o offset]"
+    echo "Usage: $SCRIPTNAME [-l <limit>] [-o <offset>]"
     echo "List call log history"
-    echo "  -l limit   offset in call log list (default: $PARAM_LIMIT)"
-    echo "  -o offset  offset in call log list (default: $PARAM_OFFSET)"
-    exit 0
+    echo "  -l <limit>   limit in call log list (default: $PARAM_LIMIT_DEFAULT)"
+    echo "  -o <offset>  offset in call log list (default: $PARAM_OFFSET_DEFAULT)"
 }
 
 while getopts :hl:o: option
 do
     case "$option" in
-        h) show_usage;;
-        l) PARAM_LIMIT=$OPTARG;;
-        o) PARAM_OFFSET=$OPTARG;;
+        h) show_usage; exit 0;;
+        l) PARAM_LIMIT="$OPTARG";;
+        o) PARAM_OFFSET="$OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
 shift $((OPTIND-1))
+
+validate_is_postive_number l "$PARAM_LIMIT"
+validate_is_postive_number o "$PARAM_OFFSET"
 
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
