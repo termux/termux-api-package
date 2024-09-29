@@ -5,7 +5,10 @@ set -e -u
 
 SCRIPTNAME=termux-battery-status
 show_usage () {
-    echo "Usage: $SCRIPTNAME
+    RESET='\e[0m'
+    LABEL='\e[96m'
+
+    echo -e "${LABEL}Usage${RESET}: $SCRIPTNAME
 Get the status of the device battery."
     exit 0
 }
