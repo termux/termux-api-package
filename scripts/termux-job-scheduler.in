@@ -1,4 +1,6 @@
 #!@TERMUX_PREFIX@/bin/bash
+# shellcheck shell=bash
+
 set -e -u -f
 
 SCRIPTNAME=termux-job-scheduler

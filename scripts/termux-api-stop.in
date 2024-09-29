@@ -1,2 +1,4 @@
 #!@TERMUX_PREFIX@/bin/sh
+# shellcheck shell=bash
+
 am stopservice -n com.termux.api/.KeepAliveService

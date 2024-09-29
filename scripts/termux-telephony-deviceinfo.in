@@ -1,4 +1,6 @@
 #!@TERMUX_PREFIX@/bin/sh
+# shellcheck shell=bash
+
 set -e -u
 
 SCRIPTNAME=termux-telephony-deviceinfo
