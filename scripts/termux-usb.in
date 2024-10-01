@@ -11,8 +11,8 @@ show_usage () {
     echo "  -e command   execute the specified command with a file descriptor"
     echo "                 referring to the device as an argument (unless -E"
     echo "                 argument is given)"
-    echo "  -E           transfer file descriptor as env var instead of as"
-    echo "                 command line argument"
+    echo "  -E           transfer file descriptor as TERMUX_USB_FD env var"
+    echo "                 instead of as command line argument"
     exit 0
 }
 
