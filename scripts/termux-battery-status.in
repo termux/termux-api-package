@@ -1,18 +1,27 @@
 #!@TERMUX_PREFIX@/bin/sh
+# shellcheck shell=bash
+
 set -e -u
 
 SCRIPTNAME=termux-battery-status
 show_usage () {
-    echo "Usage: $SCRIPTNAME"
-    echo "Get the status of the device battery."
+    RESET='\e[0m'
+    LABEL='\e[96m'
+
+    echo -e "${LABEL}Usage${RESET}: $SCRIPTNAME
+Get the status of the device battery."
     exit 0
 }
+
+specification=:h
+option_names_as_string="$(echo "$specification" | sed 's/://g' | sed -r 's/(.)/ -\1/g')"
+read -r -a option_names_as_array <<< "$option_names_as_string"
 
 while getopts :h option
 do
     case "$option" in
         h) show_usage;;
-        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG, expected one of ${option_names_as_array[*]}"; exit 1;
     esac
 done
 shift $((OPTIND-1))

@@ -1,2 +1,4 @@
 #!@TERMUX_PREFIX@/bin/sh
+# shellcheck shell=bash
+
 am startservice -n com.termux.api/.KeepAliveService

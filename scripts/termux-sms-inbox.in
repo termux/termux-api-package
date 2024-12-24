@@ -1,4 +1,6 @@
 #!@TERMUX_PREFIX@/bin/sh
+# shellcheck shell=bash
+
 
 echo "termux-sms-inbox: This script has been replaced by termux-sms-list."
 exit 1
