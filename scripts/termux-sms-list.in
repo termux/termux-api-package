@@ -1,56 +1,616 @@
-#!@TERMUX_PREFIX@/bin/sh
+#!@TERMUX_PREFIX@/bin/bash
+# shellcheck shell=bash
+
 set -u
 
-PARAM_LIMIT=10
-PARAM_OFFSET=0
-PARAM_TYPE=all
-PARAM_NUMBER=""
-PARAMS=""
+if [ -z "${BASH_VERSION:-}" ]; then
+    echo "The 'termux-sms-list' script must be run from a 'bash' shell."; return 64 2>/dev/null|| exit 64 # EX__USAGE
+fi
 
-SCRIPTNAME=termux-sms-list
+termux_api__sms_list__init() {
 
-SUPPORTED_TYPES="all|inbox|sent|draft|outbox"
-show_usage () {
-    echo "Usage: $SCRIPTNAME [-d] [-l limit] [-n] [-o offset] [-t type] [-c] [-f number]"
-    echo "List SMS messages."
-    echo "  -l limit   limit in retrieved sms list (default: $PARAM_LIMIT)"
-    echo "  -o offset  offset in sms list (default: $PARAM_OFFSET)"
-    echo "  -t type    the type of messages to list (default: $PARAM_TYPE):"
-    echo "             $SUPPORTED_TYPES"
-    echo "  -c         conversation list (unique item per conversation)"
-    echo "  -f number  the number for locate messages"
+# Any and all global variables used by this script must be set to
+# default values here so that old/wrong values are not used as the
+# `termux_api__*__main()` function of this script or some other API
+# script may be called (repeatedly) after sourcing the respective
+# scripts.
 
-    echo "  -n         (obsolete) show phone numbers"
-    echo "  -d         (obsolete) show dates when messages were created"
-    exit 0
+TERMUX_API__SCRIPT_NAME="termux-sms-list"
+TERMUX_API__API_CONTROLLER="SmsInbox"
+
+TERMUX_API__COMMAND_TYPE_NOOP="false" # Default: `false`
+
+
+TERMUX_API__CONVERSATION_LIST="" # Default: ``
+TERMUX_API__CONVERSATION_LIMIT="" # Default: ``
+TERMUX_API__CONVERSATION_OFFSET="" # Default: ``
+TERMUX_API__CONVERSATION_SELECTION="" # Default: ``
+TERMUX_API__CONVERSATION_SORT_ORDER="" # Default: ``
+TERMUX_API__CONVERSATION_RETURN_MULTIPLE_MESSAGES="" # Default: ``
+TERMUX_API__CONVERSATION_RETURN_NESTED_VIEW="" # Default: ``
+TERMUX_API__CONVERSATION_RETURN_NO_ORDER_REVERSE="" # Default: ``
+
+
+TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE=10 # Default: `10`
+TERMUX_API__MESSASGE_LIMIT="$TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE" # Default: `10`
+TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE=0 # Default: `0`
+TERMUX_API__MESSASGE_OFFSET="$TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE" # Default: `0`
+TERMUX_API__MESSASGE_SELECTION="" # Default: ``
+TERMUX_API__MESSASGE_ADDRESS="" # Default: ``
+TERMUX_API__MESSAGE_SORT_ORDER="" # Default: ``
+TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE="all" # Default: `all`
+TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES="all|inbox|sent|draft|outbox|failed|queued" # Default: `all|inbox|sent|draft|outbox|failed|queued`
+TERMUX_API__MESSASGE_TYPE_NAME="$TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE" # Default: `all`
+TERMUX_API__MESSAGE_RETURN_NO_ORDER_REVERSE="" # Default: ``
+
+# Backward compatibility.
+TERMUX_API__MESSAGE_SHOW_DATES="" # Default: ``
+TERMUX_API__MESSAGE_SHOW_PHONE_NUMBERS="" # Default: ``
+
+
+unset TERMUX_API__API_ARGS; declare -a TERMUX_API__API_ARGS=()
+
+
+# FIXME:
+#TERMUX__PREFIX___N="@TERMUX_ENV__S_TERMUX@PREFIX"
+#TERMUX__PREFIX="${!TERMUX__PREFIX___N:-}"
+#[[ ! "$TERMUX__PREFIX" =~ ^(/[^/]+)+$ ]] && \
+#TERMUX__PREFIX="@TERMUX__PREFIX@"
+TERMUX__PREFIX="@TERMUX_PREFIX@"
+
+
+# FIXME:
+#TERMUX_API__LOG_LEVEL___N="@TERMUX_ENV__S_TERMUX_API@LOG_LEVEL"
+TERMUX_API__LOG_LEVEL___N="TERMUX_API__LOG_LEVEL"
+TERMUX_API__LOG_LEVEL="${!TERMUX_API__LOG_LEVEL___N:-}"
+export "${TERMUX_API__LOG_LEVEL___N?}" || return $?
+
+TERMUX_API__MAX_LOG_LEVEL=5 # Default: `5` (VVVERBOSE=5)
+{ [[ ! "$TERMUX_API__LOG_LEVEL" =~ ^[0-9]+$ ]] || [[ "$TERMUX_API__LOG_LEVEL" -gt "$TERMUX_API__MAX_LOG_LEVEL" ]]; } && \
+TERMUX_API__LOG_LEVEL=1 # Default: `1` (OFF=0, NORMAL=1, DEBUG=2, VERBOSE=3, VVERBOSE=4 and VVVERBOSE=5)
+
 }
 
-while getopts :hdl:t:f:cno: option
-do
-    case "$option" in
-        h) show_usage;;
-        d) PARAMS="$PARAMS --ez show-dates true";;
-        l) PARAM_LIMIT=$OPTARG;;
-        t) PARAM_TYPE=$OPTARG;;
-        f) PARAM_NUMBER="--es from $OPTARG";;
-        c) PARAMS="$PARAMS --ez conversation-list true";;
-        n) PARAMS="$PARAMS --ez show-phone-numbers true";;
-        o) PARAM_OFFSET=$OPTARG;;
-        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+
+
+termux_api__log() { local log_level="${1:-}"; shift; if [[ "${TERMUX_API__LOG_LEVEL:-1}" -ge "$log_level" ]]; then echo "${TERMUX_API__SCRIPT_NAME:-termux-api}:" "$@"; fi }
+termux_api__log_literal() { local log_level="${1:-}"; shift; if [[ "${TERMUX_API__LOG_LEVEL:-1}" -ge "$log_level" ]]; then echo -e "${TERMUX_API__SCRIPT_NAME:-termux-api}:" "$@"; fi }
+termux_api__log_error() { echo "${TERMUX_API__SCRIPT_NAME:-termux-api}:" "$@" 1>&2; }
+
+
+
+##
+# `termux_api__sms_list__main` [`<argument...>`]
+##
+termux_api__sms_list__main() {
+
+    local return_value
+
+    termux_api__sms_list__init || return $?
+
+    # Process the command arguments passed to the script.
+    termux_api__sms_list__process_script_arguments "$@" || return $?
+    if [ "$TERMUX_API__COMMAND_TYPE_NOOP" = "true" ]; then return 0; fi
+
+
+    termux_api__log 2 "Running command"
+
+
+    local messasge_type_column
+    case "$TERMUX_API__MESSASGE_TYPE_NAME" in
+        all) messasge_type_column=0 ;;
+        inbox) messasge_type_column=1 ;;
+        sent) messasge_type_column=2 ;;
+        draft) messasge_type_column=3 ;;
+        outbox) messasge_type_column=4 ;;
+        failed) messasge_type_column=5 ;;
+        queued) messasge_type_column=6 ;;
+        *)
+            termux_api__log_error "Unsupported message type '$TERMUX_API__MESSASGE_TYPE_NAME'. It must one of following: $TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES"
+            return 1
+            ;;
     esac
-done
-shift $((OPTIND-1))
 
-if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-case "$PARAM_TYPE" in
-	all) PARAM_TYPE=0 ;;
-	inbox) PARAM_TYPE=1 ;;
-	sent) PARAM_TYPE=2 ;;
-	draft) PARAM_TYPE=3 ;;
-	outbox) PARAM_TYPE=4 ;;
-	*) echo "$SCRIPTNAME: Unsupported type '$PARAM_TYPE'. Use one of: $SUPPORTED_TYPES"; exit 1 ;;
-esac
+    if [[ -n "$TERMUX_API__CONVERSATION_LIST" ]]; then
+        TERMUX_API__API_ARGS+=(--ez "conversation-list" "$TERMUX_API__CONVERSATION_LIST")
 
-PARAMS="$PARAMS --ei offset $PARAM_OFFSET --ei limit $PARAM_LIMIT --ei type $PARAM_TYPE $PARAM_NUMBER"
-@TERMUX_PREFIX@/libexec/termux-api SmsInbox $PARAMS
+        if [[ "$TERMUX_API__CONVERSATION_LIST" == "true" ]]; then
+            if [[ -n "$TERMUX_API__CONVERSATION_LIMIT" ]]; then
+                TERMUX_API__API_ARGS+=(--ei "conversation-limit" "$TERMUX_API__CONVERSATION_LIMIT")
+            fi
+
+            if [[ -n "$TERMUX_API__CONVERSATION_OFFSET" ]]; then
+                TERMUX_API__API_ARGS+=(--ei "conversation-offset" "$TERMUX_API__CONVERSATION_OFFSET")
+            fi
+
+            if [[ -n "$TERMUX_API__CONVERSATION_SELECTION" ]]; then
+                TERMUX_API__API_ARGS+=(--es "conversation-selection" "$TERMUX_API__CONVERSATION_SELECTION")
+            fi
+
+            if [[ -n "$TERMUX_API__CONVERSATION_SORT_ORDER" ]]; then
+                TERMUX_API__API_ARGS+=(--es "conversation-sort-order" "$TERMUX_API__CONVERSATION_SORT_ORDER")
+            fi
+
+            if [[ -n "$TERMUX_API__CONVERSATION_RETURN_MULTIPLE_MESSAGES" ]]; then
+                TERMUX_API__API_ARGS+=(--ez "conversation-return-multiple-messages" "$TERMUX_API__CONVERSATION_RETURN_MULTIPLE_MESSAGES")
+            fi
+
+            if [[ -n "$TERMUX_API__CONVERSATION_RETURN_NESTED_VIEW" ]]; then
+                TERMUX_API__API_ARGS+=(--ez "conversation-return-nested-view" "$TERMUX_API__CONVERSATION_RETURN_NESTED_VIEW")
+            fi
+
+            if [[ -n "$TERMUX_API__CONVERSATION_SORT_ORDER" ]]; then
+                TERMUX_API__API_ARGS+=(--ez "conversation-return-no-order-reverse" "$TERMUX_API__CONVERSATION_RETURN_NO_ORDER_REVERSE")
+            fi
+        fi
+    fi
+
+
+    TERMUX_API__API_ARGS+=(
+        --ei "limit" "$TERMUX_API__MESSASGE_LIMIT"
+        --ei "offset" "$TERMUX_API__MESSASGE_OFFSET"
+        --ei "type" "$messasge_type_column"
+    )
+
+    if [[ -n "$TERMUX_API__MESSASGE_SELECTION" ]]; then
+        TERMUX_API__API_ARGS+=(--es "message-selection" "$TERMUX_API__MESSASGE_SELECTION")
+    fi
+
+    if [[ -n "$TERMUX_API__MESSASGE_ADDRESS" ]]; then
+        TERMUX_API__API_ARGS+=(--es "from" "$TERMUX_API__MESSASGE_ADDRESS")
+    fi
+
+    if [[ -n "$TERMUX_API__MESSAGE_SORT_ORDER" ]]; then
+        TERMUX_API__API_ARGS+=(--es "message-sort-order" "$TERMUX_API__MESSAGE_SORT_ORDER")
+    fi
+
+    if [[ -n "$TERMUX_API__MESSAGE_RETURN_NO_ORDER_REVERSE" ]]; then
+        TERMUX_API__API_ARGS+=(--ez "message-return-no-order-reverse" "$TERMUX_API__MESSAGE_RETURN_NO_ORDER_REVERSE")
+    fi
+
+    # Backward compatibility.
+    if [[ -n "$TERMUX_API__MESSAGE_SHOW_DATES" ]]; then
+        TERMUX_API__API_ARGS+=(--ez "show-dates" "$TERMUX_API__MESSAGE_SHOW_DATES")
+    fi
+
+    # Backward compatibility.
+    if [[ -n "$TERMUX_API__MESSAGE_SHOW_PHONE_NUMBERS" ]]; then
+        TERMUX_API__API_ARGS+=(--ez "show-phone-numbers" "$TERMUX_API__MESSAGE_SHOW_PHONE_NUMBERS")
+    fi
+
+
+    if [[ $TERMUX_API__LOG_LEVEL -ge 2 ]]; then
+        local api_args_string="termux-api $TERMUX_API__API_CONTROLLER"
+        local i=1
+        for ((i = 0; i < ${#TERMUX_API__API_ARGS[@]}; i++)); do
+            api_args_string="$api_args_string \`${TERMUX_API__API_ARGS[$i]}\`"
+        done
+        termux_api__log 2 "$api_args_string"
+    fi
+
+
+    return_value=0
+    "$TERMUX__PREFIX/libexec/termux-api" "$TERMUX_API__API_CONTROLLER" "${TERMUX_API__API_ARGS[@]}" || return_value=$?
+    if [ $return_value -ne 0 ]; then
+        termux_api__log_error "Command failed with exit code $return_value"
+    else
+        termux_api__log 2 "Command successful"
+    fi
+    return $return_value
+
+}
+
+##
+# `termux_api__sms_list__process_script_arguments` [`<argument...>`]
+##
+termux_api__sms_list__process_script_arguments() {
+
+    local opt; local opt_arg; local OPTARG; local OPTIND
+
+    # Parse options to main command.
+    while getopts ":hqvcdf:l:no:t:-:" opt; do
+        opt_arg="${OPTARG:-}"
+        case "${opt}" in
+            -)
+                case "${OPTARG}" in *?=*) opt_arg="${OPTARG#*=}";; *) opt_arg="";; esac
+                case "${OPTARG}" in
+                    help)
+                        TERMUX_API__COMMAND_TYPE_NOOP="true"
+                        termux_api__sms_list__show_help; return $?
+                        ;;
+                    # FIXME:
+                    #version)
+                    #    TERMUX_API__COMMAND_TYPE_NOOP="true"
+                    #    echo "@TERMUX_API_PKG__VERSION@"; return $?
+                    #    ;;
+                    #    [ --version ]             Display version.
+                    quiet)
+                        TERMUX_API__LOG_LEVEL=0
+                        ;;
+                    conversation-list)
+                        TERMUX_API__CONVERSATION_LIST="true"
+                        ;;
+                     conversation-limit=?*)
+                        TERMUX_API__CONVERSATION_LIMIT="$opt_arg"
+                        ;;
+                    conversation-limit | conversation-limit=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    conversation-offset=?*)
+                        TERMUX_API__CONVERSATION_OFFSET="$opt_arg"
+                        ;;
+                    conversation-offset | conversation-offset=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    conversation-return-multiple-messages)
+                        TERMUX_API__CONVERSATION_RETURN_MULTIPLE_MESSAGES="true"
+                        ;;
+                    conversation-return-nested-view)
+                        TERMUX_API__CONVERSATION_RETURN_NESTED_VIEW="true"
+                        ;;
+                    conversation-return-no-order-reverse)
+                        TERMUX_API__CONVERSATION_RETURN_NO_ORDER_REVERSE="true"
+                        ;;
+                    conversation-selection=?*)
+                        TERMUX_API__CONVERSATION_SELECTION="$opt_arg"
+                        ;;
+                    conversation-selection | conversation-selection=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    conversation-sort-order=?*)
+                        TERMUX_API__CONVERSATION_SORT_ORDER="$opt_arg"
+                        ;;
+                    conversation-sort-order | conversation-sort-order=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    message-address=?*)
+                        TERMUX_API__MESSASGE_ADDRESS="$opt_arg"
+                        ;;
+                    message-address | message-address=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    message-limit=?*)
+                        TERMUX_API__MESSASGE_LIMIT="$opt_arg"
+                        ;;
+                    message-limit | message-limit=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    message-offset=?*)
+                        TERMUX_API__MESSASGE_OFFSET="$opt_arg"
+                        ;;
+                    message-offset | message-offset=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    message-return-no-order-reverse)
+                        TERMUX_API__MESSAGE_RETURN_NO_ORDER_REVERSE="true"
+                        ;;
+                    message-selection=?*)
+                        TERMUX_API__MESSASGE_SELECTION="$opt_arg"
+                        ;;
+                    message-selection | message-selection=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    message-sort-order=?*)
+                        TERMUX_API__MESSAGE_SORT_ORDER="$opt_arg"
+                        ;;
+                    message-sort-order | message-sort-order=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    message-type=?*)
+                        TERMUX_API__MESSASGE_TYPE_NAME="$opt_arg"
+                        ;;
+                    message-type | message-type=)
+                        termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
+                        return 64 # EX__USAGE
+                        ;;
+                    '')
+                        # End of options `--`.
+                        break
+                        ;;
+                    *)
+                        termux_api__log_error "Unknown option: '--${OPTARG:-}'."
+                        termux_api__sms_list__exit_on_args_error || return $?
+
+                        ;;
+                esac
+                ;;
+            h)
+                TERMUX_API__COMMAND_TYPE_NOOP="true"
+                termux_api__sms_list__show_help; return $?
+                ;;
+            q)
+                TERMUX_API__LOG_LEVEL=0
+                ;;
+            v)
+                if [ "$TERMUX_API__LOG_LEVEL" -lt "$TERMUX_API__MAX_LOG_LEVEL" ]; then
+                    TERMUX_API__LOG_LEVEL=$((TERMUX_API__LOG_LEVEL+1));
+                else
+                    termux_api__log_error "Invalid option, max log level is $TERMUX_API__MAX_LOG_LEVEL."
+                    return 64 # EX__USAGE
+                fi
+                ;;
+            c)
+                TERMUX_API__CONVERSATION_LIST="true"
+                ;;
+            d)
+                TERMUX_API__MESSAGE_SHOW_DATES="true"
+                ;;
+            f)
+                TERMUX_API__MESSASGE_ADDRESS="$opt_arg"
+                ;;
+            l)
+                TERMUX_API__MESSASGE_LIMIT="$opt_arg"
+                ;;
+            n)
+                TERMUX_API__MESSAGE_SHOW_PHONE_NUMBERS="true"
+                ;;
+            o)
+                TERMUX_API__MESSASGE_OFFSET="$opt_arg"
+                ;;
+            t)
+                TERMUX_API__MESSASGE_TYPE_NAME="$opt_arg"
+                ;;
+            :)
+                termux_api__log_error "No argument passed for arg option '-$OPTARG'."
+                termux_api__sms_list__exit_on_args_error || return $?
+                ;;
+            \?)
+                termux_api__log_error "Unknown option${OPTARG:+": '-${OPTARG:-}'"}."
+                termux_api__sms_list__exit_on_args_error || return $?
+                ;;
+        esac
+    done
+    shift $((OPTIND - 1)) # Remove already processed arguments from argument list
+
+    # If a non-option argument is given to main command.
+    if [ $# -ne 0 ]; then
+        logger__log_error "Unknown argument(s) to command: $*"
+        return 64 # EX__USAGE
+    fi
+
+    return 0;
+
+}
+
+##
+# `termux_api__sms_list__exit_on_args_error`
+##
+termux_api__sms_list__exit_on_args_error() {
+
+    termux_api__sms_list__show_help || return $?
+
+    return 64 # EX__USAGE
+
+}
+
+##
+# `termux_api__sms_list__show_help`
+##
+termux_api__sms_list__show_help() {
+
+# FIXME: CMake `configure_file` `@ONLY` will replace `@VAR@` style
+# placeholders, so use `!VAR!` until we shift to make.
+
+    cat <<'HELP_EOF' | \
+        sed \
+            -e "s%[!]TERMUX_API__SCRIPT_NAME[!]%${TERMUX_API__SCRIPT_NAME}%g" \
+            -e "s%[!]TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE[!]%${TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE}%g" \
+            -e "s%[!]TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE[!]%${TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE}%g" \
+            -e "s%[!]TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE[!]%${TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE}%g" \
+            -e "s%[!]TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES[!]%${TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES}%g"
+!TERMUX_API__SCRIPT_NAME! command lists SMS conversations and messages.
+
+Usage:
+    !TERMUX_API__SCRIPT_NAME! [command_options]
+
+Available command_options:
+    [ -h | --help ]           Display this help screen.
+#    [ --version ]             Display version.
+    [ -q | --quiet ]          Set log level to 'OFF'.
+    [ -v | -vv | -vvv | -vvvvv ]
+                              Set log level to 'DEBUG', 'VERBOSE',
+                              'VVERBOSE' and 'VVVERBOSE'.
+    [ -c | --conversation-list ]
+                              Show SMS conversations list instead of
+                              messages list.
+                              By default only one SMS message per
+                              conversation is returned unless the
+                              '--conversation-return-multiple-messages'
+                              option is passed.
+                              By default all SMS messages are returned
+                              as a single array without nesting
+                              unless the
+                              '--conversation-return-nested-view'
+                              option is passed.
+    [ --conversation-limit=<limit> ]
+                              The SQL limit for returned SMS
+                              conversations.
+    [ --conversation-offset=<offset> ]
+                              The SQL offset for returned SMS
+                              conversations.
+    [ --conversation-return-multiple-messages ]
+                              Return multiple SMS messages per
+                              conversation.
+    [ --conversation-return-nested-view ]
+                              Return a nested object view of
+                              conversations where each conversation
+                              contains an array of SMS messages with
+                              the conversation id as the key.
+    [ --conversation-return-no-order-reverse ]
+                              Return SMS conversations without
+                              reversing order of conversation sort.
+    [ --conversation-selection=<selection> ]
+                              The SQL selection for returned SMS
+                              conversations.
+    [ --conversation-sort-order=<order> ]
+                              The SMS conversations sort order as per
+                              SQL 'ORDER BY col1, col2, ... ASC|DESC'
+                              clause.
+                              Default value: 'date DESC'.
+    [ -f address | --message-address=<address> ]
+                              The address or phone number of the
+                              sender to return SMS messages for.
+                              The '--conversation-selection' option
+                              will override this if passed.
+    [ -l limit | --message-limit=<limit> ]
+                              The limit for returned SMS messages.
+                              Default value: '!TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE!'.
+    [ -o offset | --message-offset=<offset> ]
+                              The offset for returned SMS messages.
+                              Default value: '!TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE!'.
+    [ --message-return-no-order-reverse ]
+                              Return SMS messages without reversing
+                              order of message sort.
+    [ --message-selection=<selection> ]
+                              The SQL selection for returned SMS
+                              messages.
+    [ --message-sort-order=<order> ]
+                              The SMS messages sort order as per
+                              SQL 'ORDER BY col1, col2, ... ASC|DESC'
+                              clause.
+                              Default value: 'date DESC'.
+    [ -t type | --message-type=<type> ]
+                              The type of returned SMS messages.
+                              Default value: '!TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE!'.
+                              Supported values: '!TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES!'.
+
+
+
+# Sort and Print Order
+
+When conversation or messages are queried from the Android database,
+first the sort order is applied, and then any offset and limit values
+are used to filter the entries. Since the default sort order is
+'date DESC', Android returns the latest dated conversations or
+messages first, but the API reverses the order by default so that
+the latest entries are printed at the end. If the order should not be
+reversed, then pass the respective `--*-return-no-order-reverse`
+options.
+
+
+
+# Message Type
+
+The following numbers can be used to match a message 'type' with
+the '--message-selection' option.
+- all: 0
+- inbox: 1
+- sent: 2
+- draft: 3
+- outbox: 4
+- failed: 5
+- queued: 6
+
+
+
+### Examples
+
+# Get lastest 10 messages with latest dated message printed at end.
+!TERMUX_API__SCRIPT_NAME!
+
+# Get lastest 10 messages with latest dated message printed at start.
+!TERMUX_API__SCRIPT_NAME! --message-return-no-order-reverse
+
+# Get latest message of any type.
+!TERMUX_API__SCRIPT_NAME! --message-limit=1
+
+# Get latest inbox message.
+!TERMUX_API__SCRIPT_NAME! --message-selection="type == 1" \
+    --message-limit=1
+
+# Get latest sent message.
+!TERMUX_API__SCRIPT_NAME! --message-selection="type == 2" \
+    --message-limit=1
+
+# Get oldest 10 messages with latest dated message printed at end.
+!TERMUX_API__SCRIPT_NAME! --message-sort-order="date ASC" \
+    --message-return-no-order-reverse
+
+# Get the latest inbox message received from the address '666' that
+# starts with the text 'Foo '.
+!TERMUX_API__SCRIPT_NAME! \
+    --message-selection="type == 1 and address == '666' and body LIKE 'Foo %'" \
+    --message-limit=1
+
+# Get the latest sent message sent to the address '666' that
+# starts with the text 'Bar '.
+!TERMUX_API__SCRIPT_NAME! \
+    --message-selection="type == 2 and address == '666' and body LIKE 'Bar %'" \
+    --message-limit=1
+
+
+# Get list view for conversations with default conversation limit and
+# 1 message per conversastion.
+!TERMUX_API__SCRIPT_NAME! --conversation-list
+
+# Get list view for conversations with default conversation limit and
+# 10 messages per conversation.
+!TERMUX_API__SCRIPT_NAME! --conversation-list \
+    --conversation-return-multiple-messages
+
+
+# Get nested view for conversations with default conversation and
+# message limits.
+!TERMUX_API__SCRIPT_NAME! --conversation-list \
+    --conversation-return-multiple-messages \
+    --conversation-return-nested-view
+
+# Get nested view for latest conversation with latest 5 messages.
+!TERMUX_API__SCRIPT_NAME! --conversation-list \
+    --conversation-return-multiple-messages \
+    --conversation-return-nested-view \
+    --conversation-limit=1 \
+    --message-limit=5
+
+# Get nested view for conversations sorted on thread id with highest
+# conversation id printed at end.
+!TERMUX_API__SCRIPT_NAME! --conversation-list \
+    --conversation-return-multiple-messages \
+    --conversation-return-nested-view \
+    --conversation-sort-order="thread_id ASC" \
+    --conversation-return-no-order-reverse
+
+# Get nested view for conversations for conversation with address
+# equal to '666'.
+!TERMUX_API__SCRIPT_NAME! --conversation-list \
+    --conversation-return-multiple-messages \
+    --conversation-return-nested-view \
+    --conversation-selection="address == '666'"
+
+# Get nested view for conversations for conversation with thread id
+# equal to '6'.
+!TERMUX_API__SCRIPT_NAME! --conversation-list \
+    --conversation-return-multiple-messages \
+    --conversation-return-nested-view \
+    --conversation-selection="thread_id == 6"
+
+
+
+ **See Also:**
+ - https://developer.android.com/reference/android/provider/Telephony
+ - https://developer.android.com/reference/android/provider/Telephony.Sms.Conversations
+ - https://developer.android.com/reference/android/provider/Telephony.TextBasedSmsColumns
+ - https://developer.android.com/reference/android/provider/BaseColumns
+HELP_EOF
+
+}
+
+# If script is sourced, return with success, otherwise call main function.
+# - https://stackoverflow.com/a/28776166/14686958
+# - https://stackoverflow.com/a/29835459/14686958
+if (return 0 2>/dev/null); then
+    return 0 # EX__SUCCESS
+else
+    termux_api__sms_list__main "$@"
+    exit $?
+fi
