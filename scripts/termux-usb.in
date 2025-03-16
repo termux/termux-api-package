@@ -53,17 +53,26 @@ fi
 
 CMD="@TERMUX_PREFIX@/libexec/termux-api Usb -a $ACTION $PARAMS"
 
-if [ "$ACTION" == "permission" ]
-then
-    if [ "$($CMD)" == "yes" ]
-    then
-        echo "Access granted."
-        exit 0
-    else
-        echo "Access denied."
-        exit 1
-    fi
-else
+if [[ "$ACTION" == "list" ]]; then
     $CMD
+elif [[ "$ACTION" == "permission" ]]; then
+    OUTPUT="$($CMD)"
+    case "$OUTPUT" in
+        "No such device"|"No such device.") echo "No such device."; exit 1;;
+        "yes") echo "Permission granted."; exit 0;;
+        "no"|"Permission denied.") echo "Permission denied."; exit 1;;
+        "Permission request timeout.") echo "Permission request timeout."; exit 1;;
+        *) printf "%s\n" "$OUTPUT"; exit 0;;
+    esac
+elif [[ "$ACTION" == "open" ]]; then
+    OUTPUT="$($CMD)"
+    case "$OUTPUT" in
+        "No such device"|"No such device.") echo "No such device."; exit 1;;
+        "No permission"|"Permission denied.") echo "Permission denied."; exit 1;;
+        "Permission request timeout.") echo "Permission request timeout."; exit 1;;
+        "Failed to open device"|"Open device failed.") echo "Open device failed."; exit 1;;
+        *) printf "%s\n" "$OUTPUT"; exit 0;;
+    esac
 fi
 
+exit 0
