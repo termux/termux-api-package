@@ -11,6 +11,8 @@ set_target_properties(termux-api-static PROPERTIES OUTPUT_NAME termux-api)
 add_executable(termux-api-broadcast termux-api-broadcast.c)
 target_link_libraries(termux-api-broadcast termux-api-static)
 
+add_subdirectory(usb)
+
 # TODO: get list through regex or similar
 set(script_files
   scripts/termux-api-start
