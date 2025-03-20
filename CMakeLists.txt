@@ -17,6 +17,7 @@ set(script_files
   scripts/termux-api-stop
   scripts/termux-audio-info
   scripts/termux-battery-status
+  scripts/termux-bluetooth-scan
   scripts/termux-brightness
   scripts/termux-call-log
   scripts/termux-camera-info
