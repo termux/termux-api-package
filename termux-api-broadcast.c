@@ -1,4 +1,4 @@
-/* termux-api.c - helper binary for calling termux api classes
+j/* termux-api.c - helper binary for calling termux api classes
  * Usage: termux-api ${API_METHOD} ${ADDITIONAL_FLAGS}
  * This executes
  *   am broadcast com.termux.api/.TermuxApiReceiver \
