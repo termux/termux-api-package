@@ -248,6 +248,10 @@ _Noreturn void exec_am_broadcast(int argc, char** argv,
 
     int const extra_args = 15; // Including ending NULL.
     char** child_argv = malloc((sizeof(char*)) * (argc + extra_args));
+    if (child_argv == NULL) {
+        perror("malloc failed for am child args");
+        exit(1);
+    }
 
     child_argv[0] = "am";
     child_argv[1] = "broadcast";
