@@ -275,6 +275,8 @@ _Noreturn void exec_am_broadcast(int argc, char** argv,
     // Use an a executable taking care of PATH and LD_LIBRARY_PATH:
     execv(PREFIX "/bin/am", child_argv);
 
+    // We should not reach here, if we do, then free memory we malloc'ed
+    free(child_argv);
     perror("execv(\"" PREFIX "/bin/am\")");
     exit(1);
 }
