@@ -22,7 +22,7 @@
 
 #include "termux-api.h"
 
-#define TERMUX_API_PACKAGE_VERSION "0.59.0"
+#define TERMUX_API_PACKAGE_VERSION "0.59.1"
 
 #ifndef PREFIX
 # define PREFIX "/data/data/com.termux/files/usr"
