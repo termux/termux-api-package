@@ -1,0 +1,18 @@
+[*]
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{c,h}]
+indent_style = space
+indent_size = 4
+
+# There is no consistency between tab and spaces, some files are using tabs
+# whereas others are using spaces, but use tabs as we use it in our other
+# repositories
+[*.in]
+indent_style = tab
+indent_size = 4
+
+[CMakeLists.txt]
+indent_style = space
+indent_size = 2
