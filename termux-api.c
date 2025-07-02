@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
@@ -29,6 +30,27 @@
 #endif
 
 #define LISTEN_SOCKET_ADDRESS "com.termux.api://listen"
+
+#define API_APP_MISSING_HEADER "\
+Additional Plugin Required \n\
+\n\
+To ensure proper functionality, an additional plugin needs to be installed.\n"
+#define API_APP_MISSING_FOOTER "\nThank you for your cooperation!\n"
+#define API_APP_GITHUB_URL "https://github.com/termux/termux-api/releases/latest"
+#define API_APP_FDROID_URL "https://f-droid.org/en/packages/com.termux.api"
+
+#define API_APP_NOT_INSTALLED_ERROR_UNSPECIFIED_ORIGIN API_APP_MISSING_HEADER "\
+Please download it from the same source where you installed termux:\n\
+\n\
+If you installed termux from F-Droid, get the plugin from F-Droid.\n\
+" API_APP_FDROID_URL "\n\
+\n\
+If you installed termux from GitHub, get the plugin from GitHub.\n\
+" API_APP_GITHUB_URL "\n" API_APP_MISSING_FOOTER
+
+
+static bool connected = false;
+static void *check_if_api_plugin_installed(__unused void* cookie);
 
 /* passes the arguments to the plugin via the unix socket, falling
  * back to exec_am_broadcast() if that doesn't work
@@ -448,11 +470,16 @@ int run_api_command(int argc, char **argv) {
     } else if (fork_result == 0)
         contact_plugin(argc, argv, input_addr_str, output_addr_str);
 
+    pthread_t check_thread;
+    pthread_create(&check_thread, NULL, check_if_api_plugin_installed, NULL);
+
     struct sockaddr_un remote_addr;
     socklen_t addrlen = sizeof(remote_addr);
     int input_client_socket = accept(input_server_socket,
                                      (struct sockaddr*) &remote_addr,
                                      &addrlen);
+
+    connected = true;
 
     pthread_t transmit_thread;
     pthread_create(&transmit_thread, NULL, transmit_stdin_to_socket,
@@ -462,4 +489,79 @@ int run_api_command(int argc, char **argv) {
     int fd = transmit_socket_to_stdout(input_client_socket);
     close(input_client_socket);
     return fd;
+}
+
+static int check_if_app_installed(const char* name) {
+    int status;
+    pid_t pid;
+
+    pid = fork();
+    if (pid < 0) {
+        perror("Failed to check if app installed: fork()");
+        return -1;
+    } else if (pid == 0) {
+        int null = open("/dev/null", O_RDWR);
+        if (null < 0) {
+            perror("open /dev/null");
+            return -1;
+        }
+
+        // We do not need to obtain path to apk, it will be enough to get status code of pm path command
+        if (dup2(null, 0) < 0 || dup2(null, 1) < 0 || dup2(null, 2) < 0) {
+            perror("dup2");
+            close(null);
+            return -1;
+        }
+
+        close(null);
+
+        execlp("pm", "pm", "path", name, NULL);
+        perror("execlp");
+        exit(1);
+    } else {
+        if (waitpid(pid, &status, 0) < 0) {
+            perror("waitpid");
+            return -1;
+        }
+
+        if (!WIFEXITED(status))
+            return -1;
+
+        return WEXITSTATUS(status);
+    }
+}
+
+static void *check_if_api_plugin_installed(__unused void* cookie) {
+    int status;
+    sleep(1);
+    if (connected)
+        // Everything is fine and plugin responded, no need to check if it is installed or not.
+        return NULL;
+
+    // We already sent the broadcast and we do not expect other child processes spawning.
+    struct sigaction sigchld_action = { .sa_handler = SIG_DFL, .sa_flags = SA_RESTART };
+    sigaction(SIGCHLD, &sigchld_action, NULL);
+
+    if (check_if_app_installed("com.termux") != 0)
+        // Probably something went wrong during invoking `pm path` and result is not reliable
+        // We should silently finish the thread here.
+        return NULL;
+
+    status = check_if_app_installed("com.termux.api");
+    if (status <= 0)
+        // Something went wrong and `check_if_app_installed` printed some debug info to stderr.
+        // Or plugin is installed and everything is fine.
+        return NULL;
+
+    if (status == 1) {
+        const char *origin = getenv("TERMUX_APK_RELEASE");
+        if (origin != NULL && strstr(origin, "GITHUB"))
+            fprintf(stderr, "%s\n%s\n%s", API_APP_MISSING_HEADER, API_APP_GITHUB_URL, API_APP_MISSING_FOOTER);
+        else if (origin != NULL && strstr(origin, "F_DROID"))
+            fprintf(stderr, "%s\n%s\n%s", API_APP_MISSING_HEADER, API_APP_FDROID_URL, API_APP_MISSING_FOOTER);
+        else
+            fprintf(stderr, API_APP_NOT_INSTALLED_ERROR_UNSPECIFIED_ORIGIN);
+        fflush(stderr);
+        exit(1);
+    }
 }
