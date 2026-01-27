@@ -1,0 +1,389 @@
+#!/bin/env perl
+#!/bin/env -S perl -d
+use strict;
+use warnings;
+use Socket;
+use POSIX qw(:fcntl_h :sys_wait_h);
+use Fcntl;
+use IO::Handle;
+
+# Optional ancillary FD passing support (SCM_RIGHTS)
+my $have_fd_passing = eval {
+	require Socket::Ancillary;
+	Socket::Ancillary->import(qw(recvmsg sendmsg SCM_RIGHTS));
+	1;
+};
+
+# Constants and defaults
+use constant TERMUX_API_PACKAGE_VERSION => '0.59.1';
+use constant PREFIX => '/data/data/com.termux/files/usr';
+use constant LISTEN_SOCKET_ADDRESS => 'com.termux.api://listen';
+
+$SIG{PIPE} = 'IGNORE';	 # ignore SIGPIPE like in the C code
+# $SIG{CHLD} = 'IGNORE';	 # do not create zombies
+
+# Utility: generate a pseudo-UUID (not RFC4122 strict, but similar format)
+sub generate_uuid {
+	my $pid = $$;
+	my $r1 = int(rand(0xFFFFFFFF));
+	my $r2 = int(rand(0xFFFFFFFF));
+	my $r3 = int(rand(0xFFFF));
+	my $r4 = int(rand(0x3FFF)) + 0x8000;
+	my $r5 = int(rand(0xFFFFFFFF));
+	my $r6 = int(rand(0xFFFFFFFF));
+	my $r7 = int(rand(0xFFFFFFFF));
+	return sprintf("%x%x-%x-%x-%x-%x%x%x",
+				   $r1, $r2,
+				   $pid & 0xFFFFFFFF,
+				   (($r3 & 0x0fff) | 0x4000),
+				   $r4,
+				   $r5, $r6, $r7);
+}
+
+# Exec 'am broadcast ...' fallback (replaces process)
+sub exec_am_broadcast {
+	my ($argc, $argv_ref, $input_address_string, $output_address_string) = @_;
+	# Redirect stdout -> /dev/null (preserve stderr). Close stdin.
+	open STDOUT, '>', '/dev/null' or die "open /dev/null: $!";
+	close STDIN;
+
+	my @child_argv = (
+		'broadcast',
+		'--user', '0',
+		'-n', 'com.termux.api/.TermuxApiReceiver',
+		'--es', 'socket_input', $output_address_string,
+		'--es', 'socket_output', $input_address_string,
+		'--es', 'api_method'
+	);
+
+	# Append remaining args (argv[1]..end)
+	# In the original C argv[1] is the api_method value, and remaining extras appended
+	for my $i (1 .. $#$argv_ref) {
+		push @child_argv, $argv_ref->[$i];
+	}
+
+	# Use exec to replace process. Use the full path for am as in C.
+	exec PREFIX . "/bin/am", @child_argv;
+	# If exec fails:
+	die "exec '" . PREFIX . "/bin/am' failed: $!";
+}
+
+# Exec callback helper (replaces process)
+sub exec_callback {
+	my ($fd) = @_;
+	my $fds = $fd;
+	my $export_to_env = $ENV{TERMUX_EXPORT_FD} // '';
+	if ($export_to_env ne '' && substr($export_to_env,0,4) eq 'true') {
+		$ENV{TERMUX_USB_FD} = $fds;
+		exec PREFIX . "/libexec/termux-callback", "termux-callback";
+		die "execl(" . PREFIX . "/libexec/termux-callback): $!";
+	} else {
+		exec PREFIX . "/libexec/termux-callback", "termux-callback", $fds;
+		die "execl(" . PREFIX . "/libexec/termux-callback, $fds): $!";
+	}
+}
+
+# contact_plugin: try to connect to the listen socket and send arguments.
+# fall back to exec_am_broadcast() if socket method fails.
+sub contact_plugin {
+	my ($argc, $argv_ref, $input_address_string, $output_address_string) = @_;
+
+	# Close stdout => /dev/null and close stdin
+	open STDOUT, '>', '/dev/null' or die "open /dev/null: $!";
+	close STDIN;
+
+	# Try to connect to the abstract UNIX socket LISTEN_SOCKET_ADDRESS
+	my $sock;
+	socket($sock, AF_UNIX, SOCK_STREAM, 0) or do {
+		# fallback
+		exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string);
+	};
+
+	# connect  will hang if frozen 
+	thaw();
+
+	my $addr = "\0" . LISTEN_SOCKET_ADDRESS; # abstract namespace address
+	my $packed = pack_sockaddr_un($addr);
+	unless (connect($sock, $packed)) {
+		close $sock;
+		exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string);
+	}
+
+	# Check SO_PEERCRED to verify the peer uid matches ours
+	my $optname = SOL_SOCKET();
+	my $optval = getsockopt($sock, SOL_SOCKET, SO_PEERCRED());
+	if (defined $optval) {
+		# ucred typically contains pid, uid, gid as ints. Unpack accordingly.
+		my ($peer_pid, $peer_uid, $peer_gid) = unpack('iii', $optval);
+		if ($peer_uid != $<) {
+			# Not from our uid: fallback
+			close $sock;
+			exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string);
+		}
+	} else {
+		# If getsockopt fails, fallback
+		close $sock;
+		exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string);
+	}
+
+	# Build payload buffer exactly like the C code:
+	my $insock_str	= '--es socket_input "';
+	my $outsock_str = '--es socket_output "';
+	my $method_str	= '--es api_method "';
+
+	my $len = 0;
+	$len += length($insock_str) + length($output_address_string) + 2;
+	$len += length($outsock_str) + length($input_address_string) + 2;
+	$len += length($method_str) + length($argv_ref->[1] // '') + 2;
+
+	# handle remaining argv entries
+	for (my $i = 2; $i < $argc; $i++) {
+		$len += length($argv_ref->[$i]) + 1;
+		if ($argv_ref->[$i] eq '--es' || $argv_ref->[$i] eq '-e' || $argv_ref->[$i] eq '--esa') {
+			$len += 2;
+		}
+		$len += () = ($argv_ref->[$i] =~ /"/g); # each " needs escaping
+	}
+
+	my $buffer = ''; $buffer .= $insock_str;
+	$buffer .= $output_address_string;
+	$buffer .= '" ';
+	$buffer .= $outsock_str;
+	$buffer .= $input_address_string;
+	$buffer .= '" ';
+	$buffer .= $method_str;
+	$buffer .= ($argv_ref->[1] // '') . '" ';
+
+	for (my $i = 2; $i < $argc; $i++) {
+		if ($argv_ref->[$i] eq '--es' || $argv_ref->[$i] eq '-e' || $argv_ref->[$i] eq '--esa') {
+			$buffer .= $argv_ref->[$i] . ' ';
+			$i++;
+			if ($i < $argc) {
+				$buffer .= $argv_ref->[$i] . ' ';
+			}
+			$i++;
+			if ($i < $argc) {
+				my $s = $argv_ref->[$i];
+				# escape quotes
+				$s =~ s/"/\\"/g;
+				$buffer .= '"' . $s . '"' . ' ';
+			}
+		} else {
+			$buffer .= $argv_ref->[$i] . ' ';
+		}
+	}
+
+	# Transmit length as 16-bit network-order
+	my $netlen = pack('n', length($buffer));
+
+	# send length
+	my $sent = 0;
+	while ($sent < length($netlen)) {
+		my $w = send($sock, substr($netlen, $sent), 0);
+		if (!defined $w) { warn "send length failed: $!"; close $sock; exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string); }
+		$sent += $w;
+	}
+
+	# send buffer
+	$sent = 0;
+	my $tot = length($buffer);
+	while ($sent < $tot) {
+		my $w = send($sock, substr($buffer, $sent), 0);
+		if (!defined $w) { warn "send buffer failed: $!"; close $sock; exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string); }
+		$sent += $w;
+	}
+
+	# Read response: if first message is single null byte => success, else print error
+	my $first = 1;
+	my $err = 1;
+	while (1) {
+		my $rb = '';
+		my $r = sysread($sock, $rb, 99);
+		last unless defined $r && $r > 0;
+		if ($r == 1 && $rb eq "\0" && $first) {
+			$err = 0;
+			last;
+		}
+		# otherwise it's an error msg, print to stderr
+		print STDERR $rb;
+		$first = 0;
+	}
+
+	close $sock;
+	if (!$err) {
+		exit(0);
+	}
+
+	# fallback
+	exec_am_broadcast($argc, $argv_ref, $input_address_string, $output_address_string);
+}
+
+# transmit_stdin_to_socket: accept a connection on the provided server socket and forward STDIN to it.
+sub transmit_stdin_to_socket {
+	my ($server_fd) = @_;
+
+	# Wrap the given fd into a Perl sockethandle for accept
+	my $server;
+	# We already have a raw fd; create a socket filehandle from it
+	open $server, "+<&=", $server_fd or die "open server fd: $!";
+
+	# accept
+	my $peer;
+	my $peeraddr = accept($peer, $server);
+	if (!$peer) {
+		warn "accept failed for output server: $!";
+		return;
+	}
+
+	# Read from STDIN and write to peer
+	binmode STDIN;
+	binmode $peer;
+	my $buf;
+	while (defined(my $n = sysread(STDIN, $buf, 1024))) {
+		last if $n == 0;
+		my $off = 0;
+		while ($off < $n) {
+			my $w = syswrite($peer, substr($buf, $off), $n - $off);
+			last unless defined $w;
+			$off += $w;
+		}
+		last if !defined $n;
+	}
+
+	close $peer;
+	return;
+}
+
+# transmit_socket_to_stdout: read from input socket and write to STDOUT
+# If Socket::Ancillary is available, it will attempt to receive SCM_RIGHTS file descriptors.
+sub transmit_socket_to_stdout {
+	my ($input_sock) = @_;
+	binmode STDOUT;
+	my $fd = -1;
+
+	if ($have_fd_passing) {
+		# Use Socket::Ancillary to receive file descriptors (SCM_RIGHTS)
+		my $anc = Socket::Ancillary->new;
+		while (1) {
+			my $buf = '';
+			my $n = recvmsg($input_sock, $buf, 1024, 0, $anc);
+			last unless defined $n && $n > 0;
+			# Extract fds if any
+			my @recv_fds = $anc->scm_rights;
+			if (@recv_fds) {
+				$fd = $recv_fds[0];
+			}
+			# If fd present and data is single '@' byte -> treat as no output (like C)
+			if ($fd != -1 && $n == 1 && $buf eq '@') { $n = 0; }
+			if ($n > 0) {
+				syswrite(STDOUT, $buf, $n);
+			}
+			$anc->clear;
+		}
+	} else {
+		# Fallback: plain reads (no FD passing)
+		my $buf = '';
+		while (defined(my $n = sysread($input_sock, $buf, 1024))) {
+			last if $n == 0;
+			syswrite(STDOUT, $buf, $n);
+		}
+	}
+	return $fd;
+}
+
+# thaw plugin
+sub thaw() {
+	my $pid = fork();
+	if ($pid != 0) {return;}
+	# my $board = `getprop ro.hardware.sensors`;
+	# $board =~ s/\n//g;
+	# my $api = `getprop ro.build.version.sdk`;
+	# $api =~ s/\n//g;
+	# if ($api >= 34 || $api >= 33 && $board eq "unisoc") {
+	system "/system/bin/dumpsys activity -p com.termux.api p com.termux.api |grep -q isFrozen=true";
+	# real  0m0.020s
+	if ($? == 0) {
+		system '/system/bin/am freeze $(pidof com.termux.api) unf';
+		# real  0m0.066s
+	}
+	exit;
+}
+
+# Main logic: run_api_command
+sub run_api_command {
+	my ($argc, $argv_ref) = @_;
+
+	# If only --version requested
+	if ($argc == 2 && $argv_ref->[1] && $argv_ref->[1] eq '--version') {
+		print TERMUX_API_PACKAGE_VERSION, "\n";
+		exit(0);
+	}
+
+	# Generate uuid-based abstract socket names
+	my $input_addr_str	= generate_uuid();
+	my $output_addr_str = generate_uuid();
+
+	# Create server sockets (AF_UNIX abstract namespace)
+	socket(my $input_server, AF_UNIX, SOCK_STREAM, 0) or die "socket input: $!";
+	socket(my $output_server, AF_UNIX, SOCK_STREAM, 0) or die "socket output: $!";
+
+	# Bind to abstract addresses: pack_sockaddr_un expects a string beginning with "\0" to indicate abstract
+	my $in_addr = "\0" . $input_addr_str;
+	my $out_addr = "\0" . $output_addr_str;
+	my $in_packed  = pack_sockaddr_un($in_addr);
+	my $out_packed = pack_sockaddr_un($out_addr);
+
+	bind($input_server,  $in_packed)  or die "bind(input): $!";
+	bind($output_server, $out_packed) or die "bind(output): $!";
+
+	listen($input_server, 1)  or die "listen input: $!";
+	listen($output_server,1)  or die "listen output: $!";
+
+	# Fork: child runs contact_plugin, parent continues
+	my $pid = fork();
+	if (!defined $pid) { die "fork failed: $!"; }
+	if ($pid == 0) {
+		# child
+		contact_plugin($argc, $argv_ref, $input_addr_str, $output_addr_str);
+		exit(0); # unreachable as contact_plugin will exec/exit, but safe
+	}
+
+	# Parent: accept input connection
+	my $input_peer;
+	accept($input_peer, $input_server) or die "accept input failed: $!";
+
+	# Fork another child to handle transmitting STDIN to the output socket (so main thread isn't blocked)
+	my $trans_pid = fork();
+	if (!defined $trans_pid) { warn "fork for transmitter failed: $!"; }
+	if (defined $trans_pid && $trans_pid == 0) {
+		# alarm 60;
+		# Child: accept on output_server and forward STDIN
+		# Duplicate the raw fd into a fileno-style integer for helper
+		my $out_fd = fileno($output_server);
+		transmit_stdin_to_socket($out_fd);
+		exit(0);
+	}
+
+	# Parent: read from input_peer and write to STDOUT (possibly receive FDs)
+	my $fd = transmit_socket_to_stdout($input_peer);
+
+	close $input_peer;
+	waitpid($pid, 0);
+	# every thing else is done so stdin should close also 
+	kill 6, $trans_pid;
+	# print "reaped $trans_pid\n";
+	return $fd;
+}
+
+# If invoked as script, run run_api_command with CLI args
+unless (caller) {
+	my $argc = scalar(@ARGV) + 1; # include program name
+	my @argv = ($0, @ARGV);
+	my $fd = run_api_command($argc, \@argv);
+	# If an FD was returned, you may want to expose it or use it; we just print it for now
+	if (defined $fd && $fd != -1) {
+		# Note: In the C program, fd is returned to caller; for this script, print and exit.
+		print STDERR "Received FD: $fd\n";
+	}
+	exit(0);
+}
