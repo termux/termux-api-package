@@ -1,0 +1,23 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-media-key
+show_usage () {
+    echo "Usage: $SCRIPTNAME MEDIA_KEY"
+    echo "Send the given media key event."
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# -eq 0 ]; then echo "$SCRIPTNAME: missing argument"; exit 1; fi
+if [ $# -ge 2 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+
+@TERMUX_PREFIX@/libexec/termux-api Audio --es media-key $1
