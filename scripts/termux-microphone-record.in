@@ -15,6 +15,10 @@ show_usage () {
     echo "-b <bitrate> Start recording w/ specified bitrate (in kbps)"
     echo "-r <rate>    Start recording w/ specified sampling rate (in Hz)"
     echo "-c <count>   Start recording w/ specified channel count (1, 2, ...)"
+    echo "-s <source>  Start recording w/ specified audio source (integer constant):"
+    echo "               0=DEFAULT  1=MIC (default)  5=CAMCORDER"
+    echo "               6=VOICE_RECOGNITION  7=VOICE_COMMUNICATION (Bluetooth SCO)"
+    echo "               9=UNPROCESSED  10=VOICE_PERFORMANCE"
     echo "-i           Get info about current recording"
     echo "-q           Quits recording"
 }
@@ -42,7 +46,7 @@ call_api () {
     @TERMUX_PREFIX@/libexec/termux-api MicRecorder "$@"
 }
 
-while getopts h,f:,l:,e:,b:,r:,c:,d,i,q option
+while getopts h,f:,l:,e:,b:,r:,c:,s:,d,i,q option
 do
     case "$option" in
         h) sole "$@"
@@ -71,6 +75,9 @@ do
            ;;
         c) record=yes
            add_params --ei channels $((OPTARG))
+           ;;
+        s) record=yes
+           add_params --ei source $((OPTARG))
            ;;
         i) sole "$@"
            add_params -a info
