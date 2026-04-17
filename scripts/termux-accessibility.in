@@ -1,0 +1,37 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-accessibility
+show_usage() {
+    echo "Usage: $SCRIPTNAME options"
+    echo 'Options:'
+    echo 'dump (display id): returns UI XML as `adb` `uiautomator dump`'
+    echo 'click x y (display id) (duration): clicks at the given location for the given duration in milliseconds (default is 1)'
+    echo 'type toType: types the given string'
+    echo 'global-action globalAction: performs the given global action'
+    echo 'screenshot (display id): returns the taken screenshot as PNG'
+    echo 'list-displays: lists displays'
+    echo 'Default display id is 0'
+    exit 0
+}
+
+USAGE_REGEX='^(dump( [0-9]+)?|click [0-9]+ [0-9]+( [0-9]+)?( [0-9]+)?|type .+|global-action .+|screenshot( [0-9]+)?)|list-displays$'
+if ! [[ $@ =~ $USAGE_REGEX ]]; then
+    show_usage
+fi
+
+if [ "$1" == dump ]; then
+    ARGS=(--esn dump --ei display-id ${2-0})
+elif [ "$1" == click ]; then
+    ARGS=(--esn click --ei x $2 --ei y $3 --ei display-id ${4-0} --ei duration ${5-1})
+elif [ "$1" == type ]; then
+    ARGS=(--es type "$2")
+elif [ "$1" == global-action ]; then
+    ARGS=(--es global-action $2)
+elif [ "$1" == screenshot ]; then
+    ARGS=(--esn screenshot --ei display-id ${2-0})
+elif [ "$1" == list-displays ]; then
+	ARGS=(--esn list-displays)
+fi
+
+@TERMUX_PREFIX@/libexec/termux-api Accessibility "${ARGS[@]}"
