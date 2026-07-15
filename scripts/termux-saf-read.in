@@ -4,9 +4,9 @@ set -e -u
 SCRIPTNAME=termux-saf-read
 show_usage () {
     echo "Usage: $SCRIPTNAME uri"
-    echo "Reads from a file identified by a URI and writes the data to sstandard output."
+    echo "Reads from a file identified by a URI and writes the data to standard output."
     echo "You can use pipes to process the data or redirect it into a file to make a local copy."
-    echo "See termux-saf-list to get the URIs to files."
+    echo "See termux-saf-ls to get the URIs to files."
     echo " -h  show this help"
     exit 0
 }
