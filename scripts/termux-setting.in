@@ -1,0 +1,26 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-setting
+show_usage() {
+    echo "Usage: $SCRIPTNAME action namespace key [value]"
+    echo 'action: get or put (put only supports system namespace)'
+    echo 'namespace: global, secure or system'
+    echo 'key: see https://developer.android.com/reference/android/provider/Settings.NAMESPACE#constants'
+    echo 'value: value put for the given key'
+    exit 0
+}
+
+GET_USAGE_REGEX='^get (global|secure|system) [\._0-9a-z]+$'
+if [[ $@ =~ $GET_USAGE_REGEX ]]; then
+    @TERMUX_PREFIX@/libexec/termux-api Setting --es action get --es namespace $2 --es key $3
+    exit 0
+fi
+
+PUT_USAGE_REGEX='^put (system) [\._0-9a-z]+ (.+)$'
+if [[ $@ =~ $PUT_USAGE_REGEX ]]; then
+    @TERMUX_PREFIX@/libexec/termux-api Setting --es action put --es namespace $2 --es key $3 --es value $4
+    exit 0
+fi
+
+show_usage
