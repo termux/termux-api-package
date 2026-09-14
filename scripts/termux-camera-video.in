@@ -10,6 +10,7 @@ show_usage () {
     echo "-h           Shows this help"
     echo "-d           Start recording w/ defaults"
     echo "-f <file>    Start recording to specific file (must end in .mp4)"
+    echo "-s           Start recording and stream the video to STDOUT"
     echo "-c <id>      Start recording using specified camera id (see termux-camera-info)"
     echo "-l <limit>   Start recording w/ specified duration limit (in seconds, unlimited for 0)"
     echo "-b <bitrate> Start recording w/ specified video bitrate (in kbps)"
@@ -17,6 +18,13 @@ show_usage () {
     echo "-n           Start recording w/o audio"
     echo "-i           Get info about current recording"
     echo "-q           Quits recording"
+    echo
+    echo "Notes"
+    echo "  With -s (or -f /dev/stdout) the video is written to STDOUT as a raw"
+    echo "  MPEG-TS stream (not MP4), suitable for piping to a player, e.g.:"
+    echo "      $SCRIPTNAME -s -n -c 0 | ffplay -"
+    echo "  In streaming mode normal status text is suppressed; query or stop the"
+    echo "  recording from a separate invocation with -i or -q."
 }
 
 usage_error () {
@@ -42,10 +50,13 @@ call_api () {
     @TERMUX_PREFIX@/libexec/termux-api CameraVideo "$@"
 }
 
-while getopts h,f:,c:,l:,b:,r:,n,d,i,q option
+while getopts h,f:,c:,l:,b:,r:,n,d,i,q,s option
 do
     case "$option" in
         h) sole "$@"
+           ;;
+        s) record=yes
+           add_params --es file /dev/stdout
            ;;
         f) record=yes
            dir="$(dirname "$OPTARG")"
