@@ -1,0 +1,43 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-screenshot
+show_usage () {
+ echo "Usage: termux-screenshot [-d delay_ms] [output-file]"
+ echo "Take a screenshot (MediaProjection consent) and save it as PNG."
+ echo " -d delay_ms  Wait after consent before capture (default: 800,"
+ echo "              or SCREENSHOT_DELAY_MS if set)"
+ echo "Default file when omitted: \$HOME/repos/screen-ocr/latest.png"
+ echo "Requires Termux:API with api_method=Screenshot (InVxTermux fork today)."
+ exit 0
+}
+
+PARAMS=""
+DELAY_SET=0
+while getopts :hd: option
+do
+ case "$option" in
+ h) show_usage;;
+ d) PARAMS="$PARAMS --ei delay_ms $OPTARG"; DELAY_SET=1;;
+ ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+ esac
+done
+shift $((OPTIND-1))
+
+if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+
+if [ "$DELAY_SET" = 0 ]; then
+ PARAMS="$PARAMS --ei delay_ms ${SCREENSHOT_DELAY_MS:-800}"
+fi
+
+OUT="${1-}"
+if [ -z "$OUT" ]; then
+ OUT="${HOME}/repos/screen-ocr/latest.png"
+fi
+
+mkdir -p "$(dirname "$OUT")"
+touch "$OUT"
+PARAMS="$PARAMS --es file `realpath "$OUT"`"
+
+# Capture writes PNG; stdout is the absolute path (or ERROR: …).
+@TERMUX_PREFIX@/libexec/termux-api Screenshot $PARAMS
