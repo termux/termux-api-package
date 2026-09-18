@@ -9,10 +9,13 @@ show_usage() {
     echo "     short, read short information from tag  "
     echo "     full,  read full information from tag "
     echo "   -w, write information on tag  "
+    echo "   -a, advanced write. \npass a base64 encoded string of bytes to -t, \nand a mime type to this argument.\nyou may also pass 'uri' as the mime type to write a raw uri\nfrom the -t arg."
     echo "   -t, text  for tag"
     exit 0
 }
 
+ARG_A=""
+OPT_A=""
 ARG_R=""
 OPT_R=""
 ARG_W=""
@@ -23,12 +26,13 @@ PARAM=""
 
 if [ $# -eq 0 ];then show_usage;fi
 
-while getopts ":r:t:w" opt
+while getopts ":r:t:a:w" opt
 do
   case "$opt" in
       r) ARG_R="--es mode read"; OPT_R="--es param $OPTARG"; ;;
       w) ARG_W="--es mode write";;
       t) ARG_T="--es param text --es value"; OPT_T="$OPTARG"; ;;
+      a) ARG_A="--es mode mimeWrite --es mime"; OPT_A="$OPTARG"; ;;
       ?) echo "Error: unknown parameters: $opt $OPTARG;";show_usage; ;;
   esac 
 done
@@ -44,4 +48,5 @@ if [ -n "$ARG_R" ]; then if [ -n "$ARG_W" ]; then echo "Error: Incompatible para
 if [ -n "$ARG_R" ]; then set -- "$@" $ARG_R $OPT_R;fi
 if [ -n "$ARG_W" ]; then set -- "$@" $ARG_W;fi
 if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T";fi
+if [ -n "$ARG_A" ]; then set -- "$@" $ARG_A "$OPT_A";fi
 @TERMUX_PREFIX@/libexec/termux-api Nfc "$@"
