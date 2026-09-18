@@ -1,0 +1,25 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-bluetooth-scan
+show_usage () {
+    echo "Usage: $SCRIPTNAME <start/stop/info>"
+    echo "Scan for Bluetooth devices."
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# = 1 ]; then
+    @TERMUX_PREFIX@/libexec/termux-api BluetoothScan --es mode "$1"
+else
+    echo "$SCRIPTNAME: You didnt specify the mode to use." >&2
+    exit 1
+fi
