@@ -16,22 +16,22 @@ show_usage () {
     exit 0
 }
 
-ARGS=""
+ARGS=()
 
 if [ "$1" = "-d" ]; then
     shift
     if [ $# == 1 ]; then
-      ARGS="--ez delete true --es id $1"
+      ARGS=(--ez delete true --es id "$1")
     else
       show_usage
     fi
 else
     if [ $# == 2 ]; then
-      ARGS="--es id $1 --es name $2"
+      ARGS=(--es id "$1" --es name "$2")
     else
       show_usage
     fi
 fi
 
 
-@TERMUX_PREFIX@/libexec/termux-api NotificationChannel $ARGS
+@TERMUX_PREFIX@/libexec/termux-api NotificationChannel "${ARGS[@]}"
