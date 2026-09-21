@@ -19,12 +19,13 @@ show_usage () {
     echo "                 (2.0 is twice the normal speech rate)."
     echo "  -s stream    audio stream to use (default:NOTIFICATION), one of:"
     echo "                 ALARM, MUSIC, NOTIFICATION, RING, SYSTEM, VOICE_CALL"
+    echo "  -o orator    TTS voice to use (see termux-tts-voices)"
     exit 0
 }
 
 PARAMS=""
 
-while getopts :he:l:n:v:p:r:s: option
+while getopts :he:l:n:v:p:r:s:o: option
 do
     case "$option" in
         h) show_usage;;
@@ -35,6 +36,7 @@ do
         p) PARAMS="$PARAMS --ef pitch $OPTARG";;
         r) PARAMS="$PARAMS --ef rate $OPTARG";;
         s) PARAMS="$PARAMS --es stream $OPTARG";;
+        o) PARAMS="$PARAMS --es voice $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
