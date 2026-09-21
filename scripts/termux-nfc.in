@@ -3,45 +3,123 @@
 set -e -u
 
 show_usage() {
-    echo "Usage: termux-nfc [-r [short|full]] [-w] [-t [text for TAG] " 
-    echo " read/write data from/to NDEF tag "
-    echo "   -r, read tag "
-    echo "     short, read short information from tag  "
-    echo "     full,  read full information from tag "
-    echo "   -w, write information on tag  "
-    echo "   -t, text  for tag"
+    echo "Usage: termux-nfc -" 
+    echo ""
+    echo "Reads from stdin line by line, parse each line as JSON object specifying an NFC operation, and execute it."
+    echo ""
+    echo "Tag discovery: {"op": "discoverTag"}"
+    echo 'API: {"op": "api", "class": "<CLASSNAME>", "method": "<METHODNAME>", "args": [ARG1, ARG2, ...]}'
+    echo ""
+    echo "Byte array is supplied and returned in hexadecimal format, for example: 01234567DEADBEEF".
+    echo ""
+    echo "Class/Method/Args:"
+    echo "    TagTechnology close"
+    echo "    TagTechnology isConnected"
+    echo "    TagTechnology getTag"
+    echo "    ---"
+    echo "    NfcA connect"
+    echo "    NfcA getAtqa"
+    echo "    NfcA getMaxTransceiveLength"
+    echo "    NfcA getSak"
+    echo "    NfcA getTimeout"
+    echo "    NfcA setTimeout <timeout>"
+    echo "    NfcA transceive <hex-data>"
+    echo "    ---"
+    echo "    NfcB connect"
+    echo "    NfcB getApplicationData"
+    echo "    NfcB getMaxTransceiveLength"
+    echo "    NfcB getProtocolInfo"
+    echo "    NfcB transceive <hex-data>"
+    echo "    ---"
+    echo "    NfcF connect"
+    echo "    NfcF getSystemCode"
+    echo "    NfcF getManufacturer"
+    echo "    NfcF getMaxTransceiveLength"
+    echo "    NfcF getSystemCode"
+    echo "    NfcF getTimeout"
+    echo "    NfcF setTimeout <timeout>"
+    echo "    NfcF transceive <hex-data>"
+    echo "    ---"
+    echo "    NfcV connect"
+    echo "    NfcV getDsfId"
+    echo "    NfcV getMaxTransceiveLength"
+    echo "    NfcV getResponseFlags"
+    echo "    NfcV transceive <hex-data>"
+    echo "    ---"
+    echo "    IsoDep connect"
+    echo "    IsoDep getHiLayerResponse"
+    echo "    IsoDep getHistoricalBytes"
+    echo "    IsoDep getMaxTransceiveLength"
+    echo "    IsoDep getTimeout"
+    echo "    IsoDep isExtendedLengthApduSupported"
+    echo "    IsoDep setTimeout <timeout>"
+    echo "    IsoDep transceive <hex-data>"
+    echo "    ---"
+    echo "    Ndef canMakeReadOnly"
+    echo "    Ndef connect"
+    echo "    Ndef getCachedNdefMessage"
+    echo "    Ndef getMaxSize"
+    echo "    Ndef getNdefMessage"
+    echo "    Ndef getType"
+    echo "    Ndef isWritable"
+    echo "    Ndef makeReadOnly"
+    echo "    Ndef writeNdefMessage <hex-message>"
+    echo "    ---"
+    echo "    MifareClassic authenticateSectorWithKeyA <sector-index> <hex-key>"
+    echo "    MifareClassic authenticateSectorWithKeyB <sector-index> <hex-key>"
+    echo "    MifareClassic blockToSector <block-index>"
+    echo "    MifareClassic connect"
+    echo "    MifareClassic decrement <block-index> <value>"
+    echo "    MifareClassic getBlockCount"
+    echo "    MifareClassic getBlockCountInSector <sector-index>"
+    echo "    MifareClassic getMaxTransceiveLength"
+    echo "    MifareClassic getSectorCount"
+    echo "    MifareClassic getSize"
+    echo "    MifareClassic getTimeout"
+    echo "    MifareClassic getType"
+    echo "    MifareClassic increment <block-index> <value>"
+    echo "    MifareClassic readBlock <block-index>"
+    echo "    MifareClassic restore <block-index>"
+    echo "    MifareClassic sectorToBlock <sector-index>"
+    echo "    MifareClassic setTimeout <timeout>"
+    echo "    MifareClassic transceive <hex-data>"
+    echo "    MifareClassic transfer <block-index>"
+    echo "    MifareClassic writeBlock <block-index> <hex-data>"
+    echo "    ---"
+    echo "    MifareUltralight connect"
+    echo "    MifareUltralight getMaxTransceiveLength"
+    echo "    MifareUltralight getTimeout"
+    echo "    MifareUltralight getType"
+    echo "    MifareUltralight readPages <page-offset>"
+    echo "    MifareUltralight setTimeout <timeout>"
+    echo "    MifareUltralight transceive <hex-data>"
+    echo "    MifareUltralight writePage <page-offset> <hex-data>"
+    echo "    ---"
+    echo "    NfcBarcode connect"
+    echo "    NfcBarcode getBarcode"
+    echo "    NfcBarcode getType"
+    echo "    ---"
+    echo "    NdefFormatable connect"
+    echo "    NdefFormatable format <hex-message>"
+    echo "    NdefFormatable formatReadOnly <hex-message>"
+    echo ""
+    echo "Example:"
+    echo '    {"op": "discoverTag"}'
+    echo '    {"op": "api", "class":"IsoDep", "method": "connect", "args": []}'
+    echo '    {"op": "api", "class":"IsoDep", "method": "transceive", "args": [{"format": "hex", "value": "00A40000023F00"}]}'
+    echo '    {"op": "api", "class":"TagTechnology", "method": "close", "args": []}'
+    echo '    {"op": "api", "class":"MifareClassic", "method": "connect", "args": []}'
+    echo '    {"op": "api", "class":"MifareClassic", "method": "authenticateSectorWithKeyA", "args": [0, {"format": "hex", "value": "FFFFFFFFFFFFFFFF"}]}'
+    echo '    {"op": "api", "class":"MifareClassic", "method": "readBlock", "args": [0]}'
+    echo '    {"op": "api", "class":"TagTechnology", "method": "close", "args": []}'
+
     exit 0
 }
 
-ARG_R=""
-OPT_R=""
-ARG_W=""
-OPT_T=""
-ARG_T=""
+if [ $# -ne 1 ] || [ "$1" != "-" ];
+then
+    show_usage
+    exit 1
+fi
 
-PARAM=""
-
-if [ $# -eq 0 ];then show_usage;fi
-
-while getopts ":r:t:w" opt
-do
-  case "$opt" in
-      r) ARG_R="--es mode read"; OPT_R="--es param $OPTARG"; ;;
-      w) ARG_W="--es mode write";;
-      t) ARG_T="--es param text --es value"; OPT_T="$OPTARG"; ;;
-      ?) echo "Error: unknown parameters: $opt $OPTARG;";show_usage; ;;
-  esac 
-done
-
-
-shift $((OPTIND-1))
-
-if [ "$#" != 0 ]; then echo "Error: too many parameters!"; show_usage;fi
-if [ -n "$ARG_R" ]; then if [ -n "$ARG_W" ]; then echo "Error: Incompatible parameters! \"-r and \"-n";show_usage;fi;fi
-
-
-
-if [ -n "$ARG_R" ]; then set -- "$@" $ARG_R $OPT_R;fi
-if [ -n "$ARG_W" ]; then set -- "$@" $ARG_W;fi
-if [ -n "$ARG_T" ]; then set -- "$@" $ARG_T "$OPT_T";fi
-@TERMUX_PREFIX@/libexec/termux-api Nfc "$@"
+@TERMUX_PREFIX@/libexec/termux-api Nfc
