@@ -29,6 +29,7 @@ set(script_files
   scripts/termux-fingerprint
   scripts/termux-infrared-frequencies
   scripts/termux-infrared-transmit
+  scripts/termux-install
   scripts/termux-job-scheduler
   scripts/termux-keystore
   scripts/termux-location

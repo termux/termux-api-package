@@ -1,0 +1,31 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-install
+show_usage () {
+    echo "Usage: $SCRIPTNAME file"
+    echo "Install an application, showing the system confirmation dialog."
+    echo "The argument may be a single .apk, a directory of split APKs, or a split"
+    echo "bundle (.apkm/.apks/.xapk) whose APKs are installed together as one session."
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# = 0 ]; then echo "$SCRIPTNAME: missing file argument"; exit 1; fi
+if [ $# -gt 1 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
+
+if [ ! -e "$1" ]; then
+    echo "$1 does not exist"
+    exit 1
+fi
+
+# Note that the file path can contain whitespace.
+@TERMUX_PREFIX@/libexec/termux-api Install --es file "$(realpath "$1")"
