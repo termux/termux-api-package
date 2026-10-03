@@ -1,0 +1,105 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e
+
+SCRIPTNAME=termux-camera-video
+
+show_usage () {
+    echo "Usage: $SCRIPTNAME [args]"
+    echo "Record video using a camera on your device"
+    echo
+    echo "-h           Shows this help"
+    echo "-d           Start recording w/ defaults"
+    echo "-f <file>    Start recording to specific file (must end in .mp4)"
+    echo "-s           Start recording and stream the video to STDOUT"
+    echo "-c <id>      Start recording using specified camera id (see termux-camera-info)"
+    echo "-l <limit>   Start recording w/ specified duration limit (in seconds, unlimited for 0)"
+    echo "-b <bitrate> Start recording w/ specified video bitrate (in kbps)"
+    echo "-r <fps>     Start recording w/ specified frame rate"
+    echo "-n           Start recording w/o audio"
+    echo "-i           Get info about current recording"
+    echo "-q           Quits recording"
+    echo
+    echo "Notes"
+    echo "  With -s (or -f /dev/stdout) the video is written to STDOUT as a raw"
+    echo "  MPEG-TS stream (not MP4), suitable for piping to a player, e.g.:"
+    echo "      $SCRIPTNAME -s -n -c 0 | ffplay -"
+    echo "  In streaming mode normal status text is suppressed; query or stop the"
+    echo "  recording from a separate invocation with -i or -q."
+}
+
+usage_error () {
+    echo
+    show_usage
+    exit 1
+}
+
+sole() {
+    if [ "$1 $2" != "-$option $OPTARG" ] || [ $# -gt 2 ]; then
+        echo "ERROR: No other options should be specified with -$option!"
+        usage_error
+    fi
+}
+
+add_params() {
+    for i in "$@"; do
+        params[index++]="$i"
+    done
+}
+
+call_api () {
+    @TERMUX_PREFIX@/libexec/termux-api CameraVideo "$@"
+}
+
+while getopts h,f:,c:,l:,b:,r:,n,d,i,q,s option
+do
+    case "$option" in
+        h) sole "$@"
+           ;;
+        s) record=yes
+           add_params --es file /dev/stdout
+           ;;
+        f) record=yes
+           dir="$(dirname "$OPTARG")"
+           file="$(basename "$OPTARG")"
+           dir="$(realpath "$dir")"
+           add_params --es file "$dir/$file"
+           ;;
+        c) record=yes
+           add_params --es camera "$OPTARG"
+           ;;
+        # API takes limit in milliseconds
+        l) record=yes
+           add_params --ei limit $((OPTARG * 1000))
+           ;;
+        # API takes bitrate in bps
+        b) record=yes
+           add_params --ei bitrate $((OPTARG * 1000))
+           ;;
+        r) record=yes
+           add_params --ei fps $((OPTARG))
+           ;;
+        n) record=yes
+           add_params --ez audio false
+           ;;
+        d) record=yes
+           ;;
+        i) sole "$@"
+           add_params -a info
+           ;;
+        q) sole "$@"
+           add_params -a quit
+           ;;
+        *) usage_error
+           ;;
+    esac
+done
+
+if [ -v record ]; then
+    add_params -a record
+fi
+
+if [ -v params ]; then
+    call_api "${params[@]}"
+else
+    show_usage
+fi
