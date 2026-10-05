@@ -1,26 +1,32 @@
-#!@TERMUX_PREFIX@/bin/sh
+#!@TERMUX_PREFIX@/bin/bash
 set -e -u
 
 SCRIPTNAME=termux-clipboard-set
 show_usage () {
     echo "Usage: $SCRIPTNAME [text]"
     echo "Set the system clipboard text. The text to set is either supplied as arguments or read from stdin if no arguments are given."
+	echo "  -s/--sensitive           Mark the written data as sensitive"
     exit 0
 }
 
-while getopts :h option
-do
-    case "$option" in
-	h) show_usage;;
-	?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
-    esac
+OPT_SENSITIVE=false
+
+eval set -- "$(getopt -o hs -l sensitive,help -- "$@")"
+
+while true; do
+  case "$1" in
+		-s | --sensitive) OPT_SENSITIVE=true; shift 1;;
+		-h | --help) show_usage;;
+		--) shift; break;;
+	esac
 done
-shift $((OPTIND-1))
 
 CMD="@TERMUX_PREFIX@/libexec/termux-api Clipboard -e api_version 2 --ez set true"
+if [ "$OPT_SENSITIVE" = true ]; then
+	CMD+=" --ez sensitive true"
+fi
 if [ $# = 0 ]; then
 	$CMD
 else
 	echo -n "$@" | $CMD
 fi
-
