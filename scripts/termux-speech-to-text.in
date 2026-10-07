@@ -3,17 +3,20 @@ set -e -u
 
 SCRIPTNAME=termux-speech-to-text
 show_usage () {
-    echo "Usage: $SCRIPTNAME"
+    echo "Usage: $SCRIPTNAME [-l language]"
     echo "Converts speech to text, sending partial matches to stdout."
+    echo "  -l language  language to speak in (may be unsupported by the engine)"
     exit 0
 }
 
 show_progress=false
-while getopts :hp option
+PARAMS=""
+while getopts :hpl option
 do
     case "$option" in
         h) show_usage;;
         p) show_progress=true;;
+		l) PARAMS="$PARAMS --es language $OPTARG";;
         ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
     esac
 done
@@ -21,9 +24,9 @@ shift $((OPTIND-1))
 
 if [ $# != 0 ]; then echo "$SCRIPTNAME: too many arguments"; exit 1; fi
 
-CMD=@TERMUX_PREFIX@/libexec/termux-api
+CMD="@TERMUX_PREFIX@/libexec/termux-api SpeechToText $PARAMS"
 if [ $show_progress = true ]; then
-  $CMD SpeechToText
+  $CMD
 else
-  $CMD SpeechToText | tail -1
+  $CMD | tail -1
 fi

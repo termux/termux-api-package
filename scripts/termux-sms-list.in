@@ -31,16 +31,16 @@ TERMUX_API__CONVERSATION_RETURN_NESTED_VIEW="" # Default: ``
 TERMUX_API__CONVERSATION_RETURN_NO_ORDER_REVERSE="" # Default: ``
 
 
-TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE=10 # Default: `10`
-TERMUX_API__MESSASGE_LIMIT="$TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE" # Default: `10`
-TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE=0 # Default: `0`
-TERMUX_API__MESSASGE_OFFSET="$TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE" # Default: `0`
-TERMUX_API__MESSASGE_SELECTION="" # Default: ``
-TERMUX_API__MESSASGE_ADDRESS="" # Default: ``
+TERMUX_API__MESSAGE_LIMIT___DEFAULT_VALUE=10 # Default: `10`
+TERMUX_API__MESSAGE_LIMIT="$TERMUX_API__MESSAGE_LIMIT___DEFAULT_VALUE" # Default: `10`
+TERMUX_API__MESSAGE_OFFSET___DEFAULT_VALUE=0 # Default: `0`
+TERMUX_API__MESSAGE_OFFSET="$TERMUX_API__MESSAGE_OFFSET___DEFAULT_VALUE" # Default: `0`
+TERMUX_API__MESSAGE_SELECTION="" # Default: ``
+TERMUX_API__MESSAGE_ADDRESS="" # Default: ``
 TERMUX_API__MESSAGE_SORT_ORDER="" # Default: ``
-TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE="all" # Default: `all`
-TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES="all|inbox|sent|draft|outbox|failed|queued" # Default: `all|inbox|sent|draft|outbox|failed|queued`
-TERMUX_API__MESSASGE_TYPE_NAME="$TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE" # Default: `all`
+TERMUX_API__MESSAGE_TYPE_NAME___DEFAULT_VALUE="all" # Default: `all`
+TERMUX_API__MESSAGE_TYPE_NAME___SUPPORTED_VALUES="all|inbox|sent|draft|outbox|failed|queued" # Default: `all|inbox|sent|draft|outbox|failed|queued`
+TERMUX_API__MESSAGE_TYPE_NAME="$TERMUX_API__MESSAGE_TYPE_NAME___DEFAULT_VALUE" # Default: `all`
 TERMUX_API__MESSAGE_RETURN_NO_ORDER_REVERSE="" # Default: ``
 
 # Backward compatibility.
@@ -96,17 +96,17 @@ termux_api__sms_list__main() {
     termux_api__log 2 "Running command"
 
 
-    local messasge_type_column
-    case "$TERMUX_API__MESSASGE_TYPE_NAME" in
-        all) messasge_type_column=0 ;;
-        inbox) messasge_type_column=1 ;;
-        sent) messasge_type_column=2 ;;
-        draft) messasge_type_column=3 ;;
-        outbox) messasge_type_column=4 ;;
-        failed) messasge_type_column=5 ;;
-        queued) messasge_type_column=6 ;;
+    local message_type_column
+    case "$TERMUX_API__MESSAGE_TYPE_NAME" in
+        all) message_type_column=0 ;;
+        inbox) message_type_column=1 ;;
+        sent) message_type_column=2 ;;
+        draft) message_type_column=3 ;;
+        outbox) message_type_column=4 ;;
+        failed) message_type_column=5 ;;
+        queued) message_type_column=6 ;;
         *)
-            termux_api__log_error "Unsupported message type '$TERMUX_API__MESSASGE_TYPE_NAME'. It must one of following: $TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES"
+            termux_api__log_error "Unsupported message type '$TERMUX_API__MESSAGE_TYPE_NAME'. It must one of following: $TERMUX_API__MESSAGE_TYPE_NAME___SUPPORTED_VALUES"
             return 1
             ;;
     esac
@@ -148,17 +148,17 @@ termux_api__sms_list__main() {
 
 
     TERMUX_API__API_ARGS+=(
-        --ei "limit" "$TERMUX_API__MESSASGE_LIMIT"
-        --ei "offset" "$TERMUX_API__MESSASGE_OFFSET"
-        --ei "type" "$messasge_type_column"
+        --ei "limit" "$TERMUX_API__MESSAGE_LIMIT"
+        --ei "offset" "$TERMUX_API__MESSAGE_OFFSET"
+        --ei "type" "$message_type_column"
     )
 
-    if [[ -n "$TERMUX_API__MESSASGE_SELECTION" ]]; then
-        TERMUX_API__API_ARGS+=(--es "message-selection" "$TERMUX_API__MESSASGE_SELECTION")
+    if [[ -n "$TERMUX_API__MESSAGE_SELECTION" ]]; then
+        TERMUX_API__API_ARGS+=(--es "message-selection" "$TERMUX_API__MESSAGE_SELECTION")
     fi
 
-    if [[ -n "$TERMUX_API__MESSASGE_ADDRESS" ]]; then
-        TERMUX_API__API_ARGS+=(--es "from" "$TERMUX_API__MESSASGE_ADDRESS")
+    if [[ -n "$TERMUX_API__MESSAGE_ADDRESS" ]]; then
+        TERMUX_API__API_ARGS+=(--es "from" "$TERMUX_API__MESSAGE_ADDRESS")
     fi
 
     if [[ -n "$TERMUX_API__MESSAGE_SORT_ORDER" ]]; then
@@ -269,21 +269,21 @@ termux_api__sms_list__process_script_arguments() {
                         return 64 # EX__USAGE
                         ;;
                     message-address=?*)
-                        TERMUX_API__MESSASGE_ADDRESS="$opt_arg"
+                        TERMUX_API__MESSAGE_ADDRESS="$opt_arg"
                         ;;
                     message-address | message-address=)
                         termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
                         return 64 # EX__USAGE
                         ;;
                     message-limit=?*)
-                        TERMUX_API__MESSASGE_LIMIT="$opt_arg"
+                        TERMUX_API__MESSAGE_LIMIT="$opt_arg"
                         ;;
                     message-limit | message-limit=)
                         termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
                         return 64 # EX__USAGE
                         ;;
                     message-offset=?*)
-                        TERMUX_API__MESSASGE_OFFSET="$opt_arg"
+                        TERMUX_API__MESSAGE_OFFSET="$opt_arg"
                         ;;
                     message-offset | message-offset=)
                         termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
@@ -293,7 +293,7 @@ termux_api__sms_list__process_script_arguments() {
                         TERMUX_API__MESSAGE_RETURN_NO_ORDER_REVERSE="true"
                         ;;
                     message-selection=?*)
-                        TERMUX_API__MESSASGE_SELECTION="$opt_arg"
+                        TERMUX_API__MESSAGE_SELECTION="$opt_arg"
                         ;;
                     message-selection | message-selection=)
                         termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
@@ -307,7 +307,7 @@ termux_api__sms_list__process_script_arguments() {
                         return 64 # EX__USAGE
                         ;;
                     message-type=?*)
-                        TERMUX_API__MESSASGE_TYPE_NAME="$opt_arg"
+                        TERMUX_API__MESSAGE_TYPE_NAME="$opt_arg"
                         ;;
                     message-type | message-type=)
                         termux_api__log_error "No argument set for arg option '--${OPTARG%=*}'."
@@ -346,19 +346,19 @@ termux_api__sms_list__process_script_arguments() {
                 TERMUX_API__MESSAGE_SHOW_DATES="true"
                 ;;
             f)
-                TERMUX_API__MESSASGE_ADDRESS="$opt_arg"
+                TERMUX_API__MESSAGE_ADDRESS="$opt_arg"
                 ;;
             l)
-                TERMUX_API__MESSASGE_LIMIT="$opt_arg"
+                TERMUX_API__MESSAGE_LIMIT="$opt_arg"
                 ;;
             n)
                 TERMUX_API__MESSAGE_SHOW_PHONE_NUMBERS="true"
                 ;;
             o)
-                TERMUX_API__MESSASGE_OFFSET="$opt_arg"
+                TERMUX_API__MESSAGE_OFFSET="$opt_arg"
                 ;;
             t)
-                TERMUX_API__MESSASGE_TYPE_NAME="$opt_arg"
+                TERMUX_API__MESSAGE_TYPE_NAME="$opt_arg"
                 ;;
             :)
                 termux_api__log_error "No argument passed for arg option '-$OPTARG'."
@@ -404,10 +404,10 @@ termux_api__sms_list__show_help() {
     cat <<'HELP_EOF' | \
         sed \
             -e "s%[!]TERMUX_API__SCRIPT_NAME[!]%${TERMUX_API__SCRIPT_NAME}%g" \
-            -e "s%[!]TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE[!]%${TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE}%g" \
-            -e "s%[!]TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE[!]%${TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE}%g" \
-            -e "s%[!]TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE[!]%${TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE}%g" \
-            -e "s%[!]TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES[!]%${TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES}%g"
+            -e "s%[!]TERMUX_API__MESSAGE_LIMIT___DEFAULT_VALUE[!]%${TERMUX_API__MESSAGE_LIMIT___DEFAULT_VALUE}%g" \
+            -e "s%[!]TERMUX_API__MESSAGE_OFFSET___DEFAULT_VALUE[!]%${TERMUX_API__MESSAGE_OFFSET___DEFAULT_VALUE}%g" \
+            -e "s%[!]TERMUX_API__MESSAGE_TYPE_NAME___DEFAULT_VALUE[!]%${TERMUX_API__MESSAGE_TYPE_NAME___DEFAULT_VALUE}%g" \
+            -e "s%[!]TERMUX_API__MESSAGE_TYPE_NAME___SUPPORTED_VALUES[!]%${TERMUX_API__MESSAGE_TYPE_NAME___SUPPORTED_VALUES}%g"
 !TERMUX_API__SCRIPT_NAME! command lists SMS conversations and messages.
 
 Usage:
@@ -464,10 +464,10 @@ Available command_options:
                               will override this if passed.
     [ -l limit | --message-limit=<limit> ]
                               The limit for returned SMS messages.
-                              Default value: '!TERMUX_API__MESSASGE_LIMIT___DEFAULT_VALUE!'.
+                              Default value: '!TERMUX_API__MESSAGE_LIMIT___DEFAULT_VALUE!'.
     [ -o offset | --message-offset=<offset> ]
                               The offset for returned SMS messages.
-                              Default value: '!TERMUX_API__MESSASGE_OFFSET___DEFAULT_VALUE!'.
+                              Default value: '!TERMUX_API__MESSAGE_OFFSET___DEFAULT_VALUE!'.
     [ --message-return-no-order-reverse ]
                               Return SMS messages without reversing
                               order of message sort.
@@ -481,8 +481,8 @@ Available command_options:
                               Default value: 'date DESC'.
     [ -t type | --message-type=<type> ]
                               The type of returned SMS messages.
-                              Default value: '!TERMUX_API__MESSASGE_TYPE_NAME___DEFAULT_VALUE!'.
-                              Supported values: '!TERMUX_API__MESSASGE_TYPE_NAME___SUPPORTED_VALUES!'.
+                              Default value: '!TERMUX_API__MESSAGE_TYPE_NAME___DEFAULT_VALUE!'.
+                              Supported values: '!TERMUX_API__MESSAGE_TYPE_NAME___SUPPORTED_VALUES!'.
 
 
 
