@@ -1,0 +1,49 @@
+#!@TERMUX_PREFIX@/bin/bash
+set -e -u
+
+SCRIPTNAME=termux-audio-sco
+
+show_usage () {
+    echo "Usage: $SCRIPTNAME [command]"
+    echo "Manage Bluetooth SCO audio channel for microphone capture."
+    echo
+    echo "Commands:"
+    echo "  enable   Activate SCO channel and switch to IN_COMMUNICATION mode"
+    echo "  disable  Deactivate SCO channel and restore audio mode"
+    echo "  (none)   Show current SCO state as JSON"
+    echo
+    echo "After 'enable', use termux-microphone-record -s 7 to record from Bluetooth microphone."
+    echo "Note: SCO audio quality is limited to 8-16 kHz (telephone quality)."
+    exit 0
+}
+
+while getopts :h option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ $# -gt 1 ]; then
+    echo "$SCRIPTNAME: too many arguments"
+    exit 1
+fi
+
+COMMAND="${1:-}"
+
+case "$COMMAND" in
+    enable|disable|"")
+        if [ -n "$COMMAND" ]; then
+            @TERMUX_PREFIX@/libexec/termux-api AudioSco --es command "$COMMAND"
+        else
+            @TERMUX_PREFIX@/libexec/termux-api AudioSco
+        fi
+        ;;
+    *)
+        echo "$SCRIPTNAME: unknown command '$COMMAND'"
+        echo "Valid commands: enable, disable (or no argument for status)"
+        exit 1
+        ;;
+esac
