@@ -1,0 +1,43 @@
+#!@TERMUX_PREFIX@/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-wifi-multicast
+
+show_usage () {
+	echo "Usage: $SCRIPTNAME [acquire | release | status]"
+	echo
+	echo "Control the Wi-Fi multicast lock."
+	echo
+	echo "Android drops inbound multicast and broadcast frames at the Wi-Fi"
+	echo "firmware level unless some app holds a WifiManager.MulticastLock."
+	echo "Several programs (mDNS/Bonjour/SSDP responders, HomeKit, casting,"
+	echo "discovery protocols) need that traffic but run as plain processes"
+	echo "that cannot acquire such a lock themselves."
+	echo
+	echo "  acquire    Acquire the lock and keep it held (survives backgrounding)"
+	echo "  release    Release the lock"
+	echo "  status     Print the current state"
+	echo
+	echo "The lock is held by a foreground service inside Termux:API, so it stays"
+	echo "held until 'release' is called or the app process is killed."
+	exit 0
+}
+
+if [ "$#" -ne 1 ]; then
+	show_usage
+fi
+
+case $1 in
+	acquire)
+		@TERMUX_PREFIX@/libexec/termux-api WifiMulticastAcquire
+		;;
+	release)
+		@TERMUX_PREFIX@/libexec/termux-api WifiMulticastRelease
+		;;
+	status)
+		@TERMUX_PREFIX@/libexec/termux-api WifiMulticastStatus
+		;;
+	*)
+		show_usage
+		;;
+esac

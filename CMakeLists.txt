@@ -69,6 +69,7 @@ set(script_files
   scripts/termux-wallpaper
   scripts/termux-wifi-connectioninfo
   scripts/termux-wifi-enable
+  scripts/termux-wifi-multicast
   scripts/termux-wifi-scaninfo
 )
 
