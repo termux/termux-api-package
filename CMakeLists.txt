@@ -24,6 +24,7 @@ set(script_files
   scripts/termux-clipboard-get
   scripts/termux-clipboard-set
   scripts/termux-contact-list
+  scripts/termux-cron
   scripts/termux-dialog
   scripts/termux-download
   scripts/termux-fingerprint
