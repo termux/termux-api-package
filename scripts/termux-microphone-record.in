@@ -11,7 +11,7 @@ show_usage () {
     echo "-d           Start recording w/ defaults"
     echo "-f <file>    Start recording to specific file"
     echo "-l <limit>   Start recording w/ specified limit (in seconds, unlimited for 0)"
-    echo "-e <encoder> Start recording w/ specified encoder (aac, amr_wb, amr_nb)"
+    echo "-e <encoder> Start recording w/ specified encoder (aac, amr_wb, amr_nb, opus)"
     echo "-b <bitrate> Start recording w/ specified bitrate (in kbps)"
     echo "-r <rate>    Start recording w/ specified sampling rate (in Hz)"
     echo "-c <count>   Start recording w/ specified channel count (1, 2, ...)"

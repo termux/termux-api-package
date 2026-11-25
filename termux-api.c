@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/endian.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -16,7 +16,13 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __ANDROID__
+#include <android/api-level.h>
+#endif
+
 #include "termux-api.h"
+
+#define TERMUX_API_PACKAGE_VERSION "0.60.0"
 
 #ifndef PREFIX
 # define PREFIX "/data/data/com.termux/files/usr"
@@ -24,10 +30,25 @@
 
 #define LISTEN_SOCKET_ADDRESS "com.termux.api://listen"
 
+_Noreturn void contact_plugin(int argc, char** argv,
+                                 char* input_address_string,
+                                 char* output_address_string) {
+    pid_t api_server_pid = getppid(); // Assume running after fork, so use `getppid()` instead of `getpid()`.
+    uid_t api_server_uid = getuid();
+    unsigned long long api_server_starttime = get_process_starttime(api_server_pid);
+
+    contact_plugin_v2(argc, argv,
+        api_server_pid, api_server_uid, api_server_starttime,
+        input_address_string, output_address_string);
+}
+
 /* passes the arguments to the plugin via the unix socket, falling
  * back to exec_am_broadcast() if that doesn't work
  */
-_Noreturn void contact_plugin(int argc, char** argv,
+_Noreturn void contact_plugin_v2(int argc, char** argv,
+                                 pid_t api_server_pid,
+                                 uid_t api_server_uid,
+                                 unsigned long long api_server_starttime,
                                  char* input_address_string,
                                  char* output_address_string)
 {
@@ -44,8 +65,21 @@ _Noreturn void contact_plugin(int argc, char** argv,
     };
     sigaction(SIGPIPE, &sigpipe_action, NULL);
 
-    // try to connect over the listen socket first
-    int listenfd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0);
+    // Try to connect over the listen socket first if running on Android `< 14`.
+    // On Android `>= 14`, if termux-api app process was started previously
+    // and it started the socket server, but later Android froze the
+    // process, the socket will still be connectable, but no response
+    // will be received until the app process is unfrozen agin and
+    // `read()` call below will hang indefinitely until that happens,
+    // so use legacy `am broadcast` command, which will also unfreeze
+    // the app process to deliver the intent.
+    // - https://github.com/termux/termux-api/issues/638#issuecomment-1813233924
+    int listenfd = -1;
+    #ifdef __ANDROID__
+        if (android_get_device_api_level() < 34) {
+            listenfd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0);
+        }
+    #endif
     if (listenfd != -1) {
         struct sockaddr_un listen_addr = { .sun_family = AF_UNIX };
         memcpy(listen_addr.sun_path+1, LISTEN_SOCKET_ADDRESS, strlen(LISTEN_SOCKET_ADDRESS));
@@ -57,11 +91,35 @@ _Noreturn void contact_plugin(int argc, char** argv,
 
                 const char insock_str[] = "--es socket_input \"";
                 const char outsock_str[] = "--es socket_output \"";
+                const char api_server_pid_str[] = "--ei api_server_pid ";
+                const char api_server_uid_str[] = "--ei api_server_uid ";
+                const char api_server_starttime_str[] = "--ei api_server_starttime ";
                 const char method_str[] = "--es api_method \"";
+
+                char *api_server_pid_string = "-1";
+                char *api_server_pid_string_temp = NULL;
+                if (asprintf(&api_server_pid_string_temp, "%ld", (long) api_server_pid) != -1) {
+                    api_server_pid_string = api_server_pid_string_temp;
+                }
+
+                char *api_server_uid_string = "-1";
+                char *api_server_uid_string_temp = NULL;
+                if (asprintf(&api_server_uid_string_temp, "%ju", (uintmax_t) api_server_uid) != -1) {
+                    api_server_uid_string = api_server_uid_string_temp;
+                }
+
+                char *api_server_starttime_string = "-1";
+                char *api_server_starttime_string_temp = NULL;
+                if (asprintf(&api_server_starttime_string_temp, "%llu", api_server_starttime) != -1) {
+                    api_server_starttime_string = api_server_starttime_string_temp;
+                }
 
                 int len = 0;
                 len += sizeof(insock_str)-1 + strlen(output_address_string)+2;
                 len += sizeof(outsock_str)-1 + strlen(input_address_string)+2;
+                len += sizeof(api_server_pid_str)-1 + strlen(api_server_pid_string)+1;
+                len += sizeof(api_server_uid_str)-1 + strlen(api_server_uid_string)+1;
+                len += sizeof(api_server_starttime_str)-1 + strlen(api_server_starttime_string)+1;
                 len += sizeof(method_str)-1 + strlen(argv[1])+2;
                 for (int i = 2; i<argc; i++) {
                     len += strlen(argv[i])+1;
@@ -82,6 +140,7 @@ _Noreturn void contact_plugin(int argc, char** argv,
                 char* buffer = malloc(len);
 
                 int offset = 0;
+
                 memcpy(buffer+offset, insock_str, sizeof(insock_str)-1);
                 offset += sizeof(insock_str)-1;
 
@@ -92,6 +151,7 @@ _Noreturn void contact_plugin(int argc, char** argv,
                 offset++;
                 buffer[offset] = ' ';
                 offset++;
+
 
                 memcpy(buffer+offset, outsock_str, sizeof(outsock_str)-1);
                 offset += sizeof(outsock_str)-1;
@@ -104,6 +164,40 @@ _Noreturn void contact_plugin(int argc, char** argv,
                 buffer[offset] = ' ';
                 offset++;
 
+
+                memcpy(buffer+offset, api_server_pid_str, sizeof(api_server_pid_str)-1);
+                offset += sizeof(api_server_pid_str)-1;
+
+                memcpy(buffer+offset, api_server_pid_string, strlen(api_server_pid_string));
+                offset += strlen(api_server_pid_string);
+                free(api_server_pid_string_temp);
+
+                buffer[offset] = ' ';
+                offset++;
+
+
+                memcpy(buffer+offset, api_server_uid_str, sizeof(api_server_uid_str)-1);
+                offset += sizeof(api_server_uid_str)-1;
+
+                memcpy(buffer+offset, api_server_uid_string, strlen(api_server_uid_string));
+                offset += strlen(api_server_uid_string);
+                free(api_server_uid_string_temp);
+
+                buffer[offset] = ' ';
+                offset++;
+
+
+                memcpy(buffer+offset, api_server_starttime_str, sizeof(api_server_starttime_str)-1);
+                offset += sizeof(api_server_starttime_str)-1;
+
+                memcpy(buffer+offset, api_server_starttime_string, strlen(api_server_starttime_string));
+                offset += strlen(api_server_starttime_string);
+                free(api_server_starttime_string_temp);
+
+                buffer[offset] = ' ';
+                offset++;
+
+
                 memcpy(buffer+offset, method_str, sizeof(method_str)-1);
                 offset += sizeof(method_str)-1;
 
@@ -114,6 +208,7 @@ _Noreturn void contact_plugin(int argc, char** argv,
                 offset++;
                 buffer[offset] = ' ';
                 offset++;
+
 
                 for (int i = 2; i<argc; i++) {
                     if (strcmp(argv[i], "--es") == 0 || strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--esa") == 0) {
@@ -213,13 +308,33 @@ _Noreturn void contact_plugin(int argc, char** argv,
         }
     }
 
-    exec_am_broadcast(argc, argv, input_address_string, output_address_string);
+    exec_am_broadcast_v2(argc, argv,
+        api_server_pid, api_server_uid, api_server_starttime,
+        input_address_string, output_address_string);
+}
+
+
+
+
+_Noreturn void exec_am_broadcast(int argc, char** argv,
+                                 char* input_address_string,
+                                 char* output_address_string) {
+    pid_t api_server_pid = getppid(); // Assume running after fork, so use `getppid()` instead of `getpid()`.
+    uid_t api_server_uid = getuid();
+    unsigned long long api_server_starttime = get_process_starttime(api_server_pid);
+
+    exec_am_broadcast_v2(argc, argv,
+        api_server_pid, api_server_uid, api_server_starttime,
+        input_address_string, output_address_string);
 }
 
 // Function which execs "am broadcast ..".
-_Noreturn void exec_am_broadcast(int argc, char** argv,
-                                 char* input_address_string,
-                                 char* output_address_string)
+_Noreturn void exec_am_broadcast_v2(int argc, char** argv,
+                                    pid_t api_server_pid,
+                                    uid_t api_server_uid,
+                                    unsigned long long api_server_starttime,
+                                    char* input_address_string,
+                                    char* output_address_string)
 {
     // Redirect stdout to /dev/null (but leave stderr open):
     close(STDOUT_FILENO);
@@ -227,8 +342,19 @@ _Noreturn void exec_am_broadcast(int argc, char** argv,
     // Close stdin:
     close(STDIN_FILENO);
 
-    int const extra_args = 15; // Including ending NULL.
-    char** child_argv = malloc((sizeof(char*)) * (argc + extra_args));
+    const int child_pre_argc = 23;
+    const int child_post_argc = argc - 1; // Except `argv[0]`.
+    const int child_argc = child_pre_argc + child_post_argc;
+
+    size_t child_argv_size = (sizeof(char*)) * (child_argc + 1); // Including trailing `NULL`.
+    // Do not directly cast, otherwise can trigger null pointer dereference if `NULL` is returned.
+    void* result = malloc(child_argv_size);
+    if (result == NULL) {
+        perror("malloc failed for am child args");
+        exit(1);
+    }
+
+    char **child_argv = (char **) result;
 
     child_argv[0] = "am";
     child_argv[1] = "broadcast";
@@ -243,19 +369,39 @@ _Noreturn void exec_am_broadcast(int argc, char** argv,
     child_argv[9] = "--es";
     child_argv[10] = "socket_output";
     child_argv[11] = input_address_string;
-    child_argv[12] = "--es";
-    child_argv[13] = "api_method";
-    child_argv[14] = argv[1];
 
-    // Copy the remaining arguments -2 for first binary and second api name:
-    memcpy(child_argv + extra_args, argv + 2, (argc-1) * sizeof(char*));
+    child_argv[12] = (char *) "--ei";
+    child_argv[13] = (char *) "api_server_pid";
+    if (asprintf(&child_argv[14], "%ld", (long) api_server_pid) == -1) {
+        child_argv[14] = (char *) "-1";
+    }
+
+    child_argv[15] = (char *) "--ei";
+    child_argv[16] = (char *) "api_server_uid";
+    if (asprintf(&child_argv[17], "%ju", (uintmax_t) api_server_uid) == -1) {
+        child_argv[17] = (char *) "-1";
+    }
+
+    child_argv[18] = (char *) "--ei";
+    child_argv[19] = (char *) "api_server_starttime";
+    if (asprintf(&child_argv[20], "%llu", api_server_starttime) == -1) {
+        child_argv[20] = (char *) "-1";
+    }
+
+    child_argv[21] = "--es";
+    child_argv[22] = "api_method";
+
+    // Copy the remaining arguments except `argv[0]`, `argv[1]` should be `api_method` extra value:
+    memcpy(child_argv + child_pre_argc, argv + 1, child_post_argc * sizeof(char*));
 
     // End with NULL:
-    child_argv[argc + extra_args - 1] = NULL;
+    child_argv[child_argc] = NULL;
 
     // Use an a executable taking care of PATH and LD_LIBRARY_PATH:
     execv(PREFIX "/bin/am", child_argv);
 
+    // We should not reach here, if we do, then free memory we malloc'ed
+    free(child_argv);
     perror("execv(\"" PREFIX "/bin/am\")");
     exit(1);
 }
@@ -282,6 +428,50 @@ _Noreturn void exec_callback(int fd)
     }
     perror(errmsg);
     exit(1);
+}
+
+unsigned long long get_process_starttime(pid_t pid) {
+    char *proc_stat_path = NULL;
+    if (asprintf(&proc_stat_path, "/proc/%ld/stat", (long) pid) == -1 || proc_stat_path == NULL) {
+        return -1;
+    }
+
+    FILE *fp = fopen(proc_stat_path, "r");
+    free(proc_stat_path);
+    if (fp == NULL) {
+        return -1;
+    }
+
+    char buffer[2048];
+    if (fgets(buffer, sizeof(buffer), fp) == NULL) {
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+
+    // Find last bracket `)` of field 2 for `executable` in the format `(executable)`.
+    char *lastBracketIndex = strrchr(buffer, ')');
+    if (lastBracketIndex == NULL) return -1;
+
+    // Parse fields starting right after the last `)`.
+    // Field 3 `state` begins immediately after `) `.
+    // Field 22 is `starttime` (the 20th field after field 2).
+    char state;
+    int ppid, pgrp, session, tty_nr, tpgid;
+    unsigned flags;
+    unsigned long minflt, cminflt, majflt, cmajflt, utime, stime;
+    long cutime, cstime, priority, nice, num_threads, itrealvalue;
+    unsigned long long starttime;
+
+    int parsed = sscanf(lastBracketIndex + 2,
+        "%c %d %d %d %d %d %u %lu %lu %lu %lu %lu %lu %ld %ld %ld %ld %ld %ld %llu",
+        &state, &ppid, &pgrp, &session, &tty_nr, &tpgid,
+        &flags,
+        &minflt, &cminflt, &majflt, &cmajflt, &utime, &stime,
+        &cutime, &cstime, &priority, &nice, &num_threads, &itrealvalue,
+        &starttime);
+
+    return (parsed == 20) ? starttime : -1;
 }
 
 void generate_uuid(char* str) {
@@ -347,6 +537,13 @@ int transmit_socket_to_stdout(int input_socket_fd) {
 }
 
 int run_api_command(int argc, char **argv) {
+    // If only `--version` argument is passed
+    if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+        fprintf(stdout, "%s\n", TERMUX_API_PACKAGE_VERSION);
+        fflush(stdout);
+        exit(0);
+    }
+
     // Do not transform children into zombies when they terminate:
     struct sigaction sigchld_action = {
         .sa_handler = SIG_DFL,
@@ -403,12 +600,20 @@ int run_api_command(int argc, char **argv) {
         return -1;
     }
 
+    // A `pid` and `starttime` combo can uniquely identify a process even if pid gets recycled.
+    pid_t api_server_pid = getpid();
+    uid_t api_server_uid = getuid();
+    unsigned long long api_server_starttime = get_process_starttime(api_server_pid);
+
     pid_t fork_result = fork();
     if (fork_result == -1) {
         perror("fork()");
         return -1;
-    } else if (fork_result == 0)
-        contact_plugin(argc, argv, input_addr_str, output_addr_str);
+    } else if (fork_result == 0) {
+        contact_plugin_v2(argc, argv,
+            api_server_pid, api_server_uid, api_server_starttime,
+            input_addr_str, output_addr_str);
+    }
 
     struct sockaddr_un remote_addr;
     socklen_t addrlen = sizeof(remote_addr);
